@@ -1,17 +1,20 @@
+#include <string>
 #ifndef CHIRP_SERVICE_H
 #define CHIRP_SERVICE_H
 
 namespace serviceheader {
 	class Service {
 		public:
-			register(username);
-			chirp(username, text, <reply to chirp_id>);
-			follow(username, user to follow);
-			read(chirp id);
-			monitor(username);
+			bool registerUser(string username);
+			bool loginUser(string username);
+			bool chirp(string text);
+			bool reply(string chirpID);
+			bool follow(string username);
+			string read(string chirpID);
+			bool monitor();
 
 		private:
-			std::map<>
+			// include followers?
 	}
 } // serviceheader namespace
 #endif //CHIRP_SERVICE_H
