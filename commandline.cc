@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <memory>
 #include <string>
@@ -18,7 +17,7 @@ DEFINE_string(read, "", "Reads the chirp thread starting at the given id");
 DEFINE_bool(monitor, false, "Streams new tweets from those currently followed");
 
 int main(int argc, char *argv[]) {
-	// --user flag is required for each action except register
-	// TODO: ensure required flags are present
-	// TODO: call functions from Service class based on flags
+  // --user flag is required for each action except register
+  // TODO: ensure required flags are present
+  // TODO: call functions from Service class based on flags
 }

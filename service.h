@@ -1,20 +1,32 @@
-#include <string>
 #ifndef CHIRP_SERVICE_H
 #define CHIRP_SERVICE_H
 
-namespace serviceheader {
-	class Service {
-		public:
-			bool registerUser(string username);
-			bool loginUser(string username);
-			bool chirp(string text);
-			bool reply(string chirpID);
-			bool follow(string username);
-			string read(string chirpID);
-			bool monitor();
+#include <string>
 
-		private:
-			// include followers?
-	}
-} // serviceheader namespace
+class Service {
+  public:
+    // register user with backend data store
+    bool registerUser(const string &username);
+
+    // log user in to command line
+    bool loginUser(const string &username);
+
+    // broadcast chirp from user to data store
+    bool chirp(const string &text);
+
+    // reply to chirpID (with given data store)
+    bool reply(const string &chirpID);
+
+    // add a user to following list
+    bool follow(const string &username);
+
+    // read thread given starting chirpID
+    string read(const string &chirpID);
+
+    // view stream of chirps from followers
+    bool monitor();
+
+  private:
+    // TODO: include followers
+};
 #endif //CHIRP_SERVICE_H

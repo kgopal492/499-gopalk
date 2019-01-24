@@ -6,8 +6,8 @@ registerUser function
 - returns true if username is available
 */
 bool Service::registerUser(string username) {
-	// TODO: register user with key-value store
-	return true;
+  // TODO: register user with key-value store
+  return true;
 }
 
 /*
@@ -16,8 +16,8 @@ loginUser function
 - returns true if user exists (and login is valid)
 */
 bool Service::loginUser(string username) {
-	// TODO: login user in command line
-	return true;
+  // TODO: login user in command line
+  return true;
 }
 
 /*
@@ -27,8 +27,8 @@ chirp function
   registered with key-value store
 */
 bool Service::chirp(string text) {
-	// TODO: send chirp to key-value store
-	return true;
+  // TODO: send chirp to key-value store
+  return true;
 }
 
 /*
@@ -37,8 +37,8 @@ reply function
 - returns true if reply is successful
 */
 bool Service::reply(string chirpID) {
-	// TODO: reply to chirpID, register response with key-value store
-	return true;
+  // TODO: reply to chirpID, register response with key-value store
+  return true;
 }
 
 /*
@@ -48,8 +48,8 @@ follow function
 - returns true if user exists and is possible to follow
 */
 bool Service::follow(string username) {
-	// TODO: follow user, put info in key-value store
-	return true;
+  // TODO: follow user, put info in key-value store
+  return true;
 }
 
 /*
@@ -58,8 +58,8 @@ read function
 - returns string of chirp thread
 */
 string Service::read(string chirpID) {
-	// TODO: read chirp thread from key-value store
-	return "";
+  // TODO: read chirp thread from key-value store
+  return "";
 }
 
 /*
@@ -67,5 +67,5 @@ monitor function
 - waits for service layer to send chirps of following users
 */
 void Service::monitor() {
-	// TODO: receive chirps from following users
+  // TODO: receive chirps from following users
 }
