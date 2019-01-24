@@ -11,6 +11,7 @@ namespace backendheader {
 			bool delete(string key);
 
 		private:
+			// store of key value pairs in backend
 			std::map<string, string> key_value_pairs;
 	}
 } // backendheader

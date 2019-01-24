@@ -1,10 +1,12 @@
-#include "service.h"
-#include <gflags/gflags.h>
-#include <glog/logging.h>
+
 #include <iostream>
 #include <memory>
 #include <string>
+
+#include <gflags/gflags.h>
+#include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
+#include "service.h"
 
 // Define flags for gflags
 DEFINE_string(register, "", "Registers the given username");
@@ -17,6 +19,6 @@ DEFINE_bool(monitor, false, "Streams new tweets from those currently followed");
 
 int main(int argc, char *argv[]) {
 	// --user flag is required for each action except register
-	// ensure required flags are present
-	// call functions from Service class based on flags
+	// TODO: ensure required flags are present
+	// TODO: call functions from Service class based on flags
 }
