@@ -3,12 +3,9 @@
 
 #include <string>
 
-/*
- Backend class supports 3 API calls
- get(), put(), and delete(), and contains
- a key-value-store
-*/
-
+ // Backend class supports 3 API calls
+ // get(), put(), and delete(), and contains
+ // a key-value-store
 class Backend {
  public:
   // put key and value pair in key-value store
