@@ -3,6 +3,11 @@
 
 #include <string>
 
+/*
+Service class supports requests from clients
+via their command lines and call key-value store
+to process requests
+*/
 class Service {
  public:
   // register user with backend data store
