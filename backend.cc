@@ -1,6 +1,18 @@
 #include <string>
 #include "backend.h"
 
+using grpc::Server;
+using grpc::ServerBuilder;
+using grpc::ServerContext;
+using grpc::Status;
+using chirp::PutRequest;
+using chirp::PutReply;
+using chirp::GetRequest;
+using chirp::GetReply;
+using chirp::DeleteRequest;
+using chirp::DeleteReply;
+
+
 // `put` function
 // - take `key` and `value` to insert into key-value table
 //   and return whether insertion was successful
