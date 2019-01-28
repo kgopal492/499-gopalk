@@ -36,7 +36,7 @@ DEFINE_bool(monitor, false, "Streams new tweets from those currently followed");
 class ChirpClient {
  public:
   ChirpClient(std::shared_ptr<Channel> channel)
-      : stub_(Greeter::NewStub(channel)) {}
+      : stub_(ServiceLayer::NewStub(channel)) {}
 
   // - registers username of new user with key-value store
   // - returns true if username is available
