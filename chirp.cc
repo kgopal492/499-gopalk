@@ -32,7 +32,6 @@ DEFINE_string(follow, "", "Starts following the given username");
 DEFINE_string(read, "", "Reads the chirp thread starting at the given id");
 DEFINE_bool(monitor, false, "Streams new tweets from those currently followed");
 
-
 class ChirpClient {
  public:
   ChirpClient(std::shared_ptr<Channel> channel)
