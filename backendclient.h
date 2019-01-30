@@ -1,3 +1,9 @@
+#include <string>
+
+using grpc::Channel;
+using grpc::ClientContext;
+using grpc::Status;
+
 #ifndef CHIRP_BACKENDCLIENT_H
 #define CHIRP_BACKENDCLIENT_H
 
