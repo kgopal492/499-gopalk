@@ -11,7 +11,7 @@ using chirp::GetRequest;
 using chirp::GetReply;
 using chirp::DeleteRequest;
 using chirp::DeleteReply;
-
+using chirp::KeyValueStore;
 
 // `put` function
 // - take `key` and `value` to insert into key-value table

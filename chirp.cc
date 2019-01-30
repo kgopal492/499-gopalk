@@ -8,22 +8,22 @@
 #include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
 
-using grpc::Server;
-using grpc::ServerBuilder;
-using grpc::ServerContext;
+using grpc::Channel;
+using grpc::ClientContext;
 using grpc::Status;
-using chirp::Chirp;
 
+using chirp::Chirp;
 using chirp::RegisterRequest;
 using chirp::RegisterReply;
 using chirp::ChirpRequest;
 using chirp::ChirpReply;
 using chirp::FollowRequest;
 using chirp::FollowReply;
-using chirp::readREquest;
-using chirp::readReply;
+using chirp::ReadRequest;
+using chirp::ReadReply;
 using chirp::MonitorRequest;
 using chirp::MonitorReply;
+using chirp::ServiceLayer;
 
 // Define flags for gflags
 DEFINE_string(register, "", "Registers the given username");
@@ -53,7 +53,7 @@ class ChirpClient {
     ClientContext context;
 
     // Send the rpc
-    Status status = stub_->registerUser(&context, request, &reply);
+    Status status = stub_->registeruser(&context, request, &reply);
 
     // Determine if the status is ok, then process
     if (status.ok()) {
@@ -67,7 +67,7 @@ class ChirpClient {
   
   // - logs in user to command line
   // - returns true if user exists (and login is valid)
-  Chirp chirp(const std::string& username, std::string& text, const int& parent_id) {
+  Chirp chirp(const std::string& username, std::string& text, const char* &parent_id) {
     ChirpRequest request;
     request.set_username(username);
     request.set_text(text);
@@ -84,7 +84,8 @@ class ChirpClient {
     } else {
       std::cout << status.error_code() << ": " << status.error_message()
                 << std::endl;
-      return "RPC failed";
+      Chirp chirp; // TODO: return null/invalid value
+      return chirp;
     }
   }
 
@@ -114,7 +115,7 @@ class ChirpClient {
 
   // - takes chirpID of beginning of thread
   // - returns string of chirp thread
-  Chirp read(const int& chirp_id) {
+  Chirp read(const char* &chirp_id) {
     ReadRequest request;
     request.set_chirp_id(chirp_id);
 
@@ -129,12 +130,13 @@ class ChirpClient {
     } else {
       std::cout << status.error_code() << ": " << status.error_message()
                 << std::endl;
-      return nullptr;
+      Chirp chirp; // TODO: return null/invalid value
+      return chirp;
     }
   }
 
   // - waits for service layer to send chirps of following users
-  Chirp monitor(const std::string& username) {
+  const google::protobuf::RepeatedPtrField<chirp::Chirp> monitor(const std::string& username) {
     MonitorRequest request;
     request.set_username(username);
 
@@ -149,12 +151,13 @@ class ChirpClient {
     } else {
       std::cout << status.error_code() << ": " << status.error_message()
                 << std::endl;
-      return nullptr;
+      Chirp chirp; // TODO: return null/invalid value
+      return chirp;
     }
   }
 
  private:
-  std::unique_ptr<Greeter::Stub> stub_;
+  std::unique_ptr<ServiceLayer::Stub> stub_;
 };
 
 int main(int argc, char *argv[]) {

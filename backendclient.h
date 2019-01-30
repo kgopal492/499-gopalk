@@ -1,8 +1,18 @@
 #include <string>
 
+#include <grpcpp/grpcpp.h>
+
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
+
+using chirp::PutRequest;
+using chirp::PutReply;
+using chirp::GetRequest;
+using chirp::GetReply;
+using chirp::DeleteRequest;
+using chirp::DeleteReply;
+using chirp::KeyValueStore;
 
 #ifndef CHIRP_BACKENDCLIENT_H
 #define CHIRP_BACKENDCLIENT_H

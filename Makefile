@@ -11,9 +11,9 @@ else
 LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++`\
            -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed\
            -ldl\
-           -gflags\
-           -glog\
-           -gtest
+           -lgflags\
+           -lglog\
+           -lgtest
 endif
 PROTOC = protoc
 GRPC_CPP_PLUGIN = grpc_cpp_plugin
