@@ -12,8 +12,8 @@ LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++`\
            -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed\
            -ldl\
            -lgflags\
-           -lglog\
-           -lgtest
+           -lgtest\
+	   -lglog
 endif
 PROTOC = protoc
 GRPC_CPP_PLUGIN = grpc_cpp_plugin
@@ -25,10 +25,10 @@ vpath %.proto $(PROTOS_PATH)
 
 all: service chirp
 
-service: KeyValueStore.pb.o KeyValueStore.grpc.pb.o ServiceLayer.pb.o ServiceLayer.grpc.pb.o service.o servicelayerimpl.o
+service: KeyValueStore.pb.o KeyValueStore.grpc.pb.o ServiceLayer.pb.o ServiceLayer.grpc.pb.o servicelayerimpl.o service.o backendclient.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-client: ServiceLayer.pb.o ServiceLayer.grpc.pb.o service.o servicelayerimpl.o
+client: ServiceLayer.pb.o ServiceLayer.grpc.pb.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 %.grpc.pb.cc: %.proto

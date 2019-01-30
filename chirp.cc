@@ -115,7 +115,7 @@ class ChirpClient {
 
   // - takes chirpID of beginning of thread
   // - returns string of chirp thread
-  Chirp read(const char* &chirp_id) {
+  const google::protobuf::RepeatedPtrField<chirp::Chirp> read(const char* &chirp_id) {
     ReadRequest request;
     request.set_chirp_id(chirp_id);
 
@@ -130,13 +130,13 @@ class ChirpClient {
     } else {
       std::cout << status.error_code() << ": " << status.error_message()
                 << std::endl;
-      Chirp chirp; // TODO: return null/invalid value
+      const google::protobuf::RepeatedPtrField<chirp::Chirp> chirp; // TODO: return null/invalid value
       return chirp;
     }
   }
 
   // - waits for service layer to send chirps of following users
-  const google::protobuf::RepeatedPtrField<chirp::Chirp> monitor(const std::string& username) {
+  void monitor(const std::string& username) {
     MonitorRequest request;
     request.set_username(username);
 
@@ -144,16 +144,7 @@ class ChirpClient {
 
     ClientContext context;
 
-    Status status = stub_->monitor(&context, request, &reply);
-
-    if (status.ok()) {
-      return reply.chirp();
-    } else {
-      std::cout << status.error_code() << ": " << status.error_message()
-                << std::endl;
-      Chirp chirp; // TODO: return null/invalid value
-      return chirp;
-    }
+    stub_->monitor(&context, request);
   }
 
  private:
