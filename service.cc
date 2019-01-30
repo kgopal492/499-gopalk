@@ -1,4 +1,6 @@
 #include "backendclient.h"
+#include "KeyValueStore.grpc.pb.h"
+#include "ServiceLayer.grpc.pb.h"
 #include "servicelayerimpl.h"
 
 #include <grpcpp/grpcpp.h>

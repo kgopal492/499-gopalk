@@ -1,3 +1,5 @@
+#include "ServiceLayer.grpc.pb.h"
+
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
