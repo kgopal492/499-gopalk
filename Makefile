@@ -25,10 +25,10 @@ vpath %.proto $(PROTOS_PATH)
 
 all: service chirp
 
-service: KeyValueStore.pb.o KeyValueStore.grpc.pb.o ServiceLayer.pb.o ServiceLayer.grpc.pb.o servicelayerimpl.o service.o backendclient.o
+service: KeyValueStore.pb.o KeyValueStore.grpc.pb.o ServiceLayer.pb.o ServiceLayer.grpc.pb.o servicelayerimpl.o backendclient.o service.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-client: ServiceLayer.pb.o ServiceLayer.grpc.pb.o
+chirp: ServiceLayer.pb.o ServiceLayer.grpc.pb.o chirp.cc
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 %.grpc.pb.cc: %.proto
