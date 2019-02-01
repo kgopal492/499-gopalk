@@ -28,7 +28,7 @@ all: service chirp
 service: KeyValueStore.pb.o KeyValueStore.grpc.pb.o ServiceLayer.pb.o ServiceLayer.grpc.pb.o servicelayerimpl.o backendclient.o service.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-chirp: ServiceLayer.pb.o ServiceLayer.grpc.pb.o chirp.cc
+chirp: ServiceLayer.pb.o ServiceLayer.grpc.pb.o chirpclient.o chirp.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 %.grpc.pb.cc: %.proto
