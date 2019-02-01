@@ -1,11 +1,12 @@
 #include "chirpclient.h"
 
+// constructor - initializes channel
 ChirpClient::ChirpClient(std::shared_ptr<Channel> channel)
     : stub_(ServiceLayer::NewStub(channel)) {}
 
 // - registers username of new user with key-value store
 // - returns true if username is available
-bool registeruser(const std::string& username) {
+bool ChirpClient::registeruser(const std::string& username) {
   // Send username to the service layer
   RegisterRequest request;
   request.set_username(username);
@@ -31,7 +32,7 @@ bool registeruser(const std::string& username) {
 
 // - logs in user to command line
 // - returns true if user exists (and login is valid)
-Chirp ChirpClient::chirp(const std::string& username, std::string& text, std::string& parent_id) {
+Chirp ChirpClient::chirp(const std::string& username, const std::string& text, const std::string& parent_id) {
   ChirpRequest request;
   request.set_username(username);
   request.set_text(text);

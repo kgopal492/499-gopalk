@@ -5,7 +5,7 @@ BackendClient::BackendClient(std::shared_ptr<Channel> channel)
 
 // take `key` and `value` to insert into key-value table
 // and return whether insertion was successful
-bool BackendClient::put(const string &key, const string &value) {
+bool BackendClient::put(const std::string &key, const std::string &value) {
   // Send key and value to key-value store
   PutRequest request;
   request.set_key(key);

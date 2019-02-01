@@ -1,5 +1,4 @@
 #include "chirpclient.h"
-#include "ServiceLayer.grpc.pb.h"
 
 #include <iostream>
 #include <memory>

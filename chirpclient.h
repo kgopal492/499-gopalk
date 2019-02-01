@@ -1,13 +1,16 @@
+#include "ServiceLayer.pb.h"
+#include "ServiceLayer.grpc.pb.h"
+
 #include <iostream>
 #include <memory>
 #include <string>
 
+#include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
 
-using grpc::Server;
-using grpc::ServerBuilder;
-using grpc::ServerContext;
+using grpc::Channel;
+using grpc::ClientContext;
 using grpc::Status;
 
 using chirp::Chirp;
@@ -21,6 +24,7 @@ using chirp::ReadRequest;
 using chirp::ReadReply;
 using chirp::MonitorRequest;
 using chirp::MonitorReply;
+using chirp::ServiceLayer;
 
 #ifndef CHIRP_BACKENDCLIENT_H
 #define CHIRP_BACKENDCLIENT_H
@@ -29,14 +33,14 @@ using chirp::MonitorReply;
 // from the chirp client's command line
 class ChirpClient {
  public:
-  ChirpClient(std::shared_ptr<Channel> channel)
-      : stub_(ServiceLayer::NewStub(channel)) {}
+  // constructor - initializes channel
+  ChirpClient(std::shared_ptr<Channel> channel);
   // - registers username of new user with key-value store
   // - returns true if username is available
   bool registeruser(const std::string& username);
   // - logs in user to command line
   // - returns true if user exists (and login is valid)
-  Chirp chirp(const std::string& username, std::string& text, const std::string& parent_id);
+  Chirp chirp(const std::string& username, const std::string& text, const std::string& parent_id);
   // - takes text to be chirped, and sends to key-value store
   // - returns true if chirp is successfully
   //   registered with key-value store
