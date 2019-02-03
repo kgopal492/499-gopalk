@@ -22,10 +22,58 @@ DEFINE_string(read, "", "Reads the chirp thread starting at the given id");
 DEFINE_bool(monitor, false, "Streams new tweets from those currently followed");
 
 int main(int argc, char *argv[]) {
-  // --user flag is required for each action except register
-  // TODO: ensure required flags are present
-  // TODO: call functions from Service class based on flags
-
+  // create connection with service layer
   ChirpClient client(grpc::CreateChannel(
-      "localhost:50002", grpc::InsecureChannelCredentials()));
+    "localhost:50002", grpc::InsecureChannelCredentials()));
+
+  // register flag provided, register username
+  if(!FLAGS_register.empty()) {
+    if(client.registeruser(FLAGS_register)) {
+      std::cout << "Successfully registered user " << FLAGS_register << std::endl;
+    }
+    else {
+      std::cout << "Attempt to register user " << FLAGS_register << " failed." << std::endl;
+      return 1;
+    }
+  }
+
+  // chirp flag provided, make chirp
+  if(!FLAGS_chirp.empty()) {
+    if(FLAGS_username.empty()) {
+      std::cout << "Cannot make chirp without logging in user" << std::endl;
+      return 1;
+    }
+
+    // TODO: store Chirp reply message and handle
+    client.chirp(FLAGS_username, FLAGS_chirp, FLAGS_reply);
+  }
+
+  // follow flag provided, follow given user
+  if(!FLAGS_follow.empty()) {
+    if(FLAGS_username.empty()) {
+      std::cout << "Cannot follow without logging in user" << std::endl;
+      return 1;
+    }
+    if(client.follow(FLAGS_username, FLAGS_follow)) {
+      std::cout << "User " << FLAGS_username << " successfully followed " << FLAGS_follow << "." << std::endl;
+    }
+    else {
+      std::cout << "Attempt for " << FLAGS_username << " to follow " << FLAGS_follow << " failed." << std::endl;
+      return 1;
+    }
+  }
+
+  // read flag provided, read chirp thread
+  if(!FLAGS_read.empty()) {
+    // TODO: store return in variable, and handle failure
+    client.read(FLAGS_read);
+  }
+
+  // monitor flag true, stream chirps
+  if(FLAGS_monitor) {
+    // TODO: handle failure
+    client.monitor();
+  }
+
+  return 0;
 }
