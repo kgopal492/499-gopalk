@@ -39,26 +39,26 @@ int main(int argc, char *argv[]) {
 
   // chirp flag provided, make chirp
   if(!FLAGS_chirp.empty()) {
-    if(FLAGS_username.empty()) {
+    if(FLAGS_user.empty()) {
       std::cout << "Cannot make chirp without logging in user" << std::endl;
       return 1;
     }
 
     // TODO: store Chirp reply message and handle
-    client.chirp(FLAGS_username, FLAGS_chirp, FLAGS_reply);
+    client.chirp(FLAGS_user, FLAGS_chirp, FLAGS_reply);
   }
 
   // follow flag provided, follow given user
   if(!FLAGS_follow.empty()) {
-    if(FLAGS_username.empty()) {
+    if(FLAGS_user.empty()) {
       std::cout << "Cannot follow without logging in user" << std::endl;
       return 1;
     }
-    if(client.follow(FLAGS_username, FLAGS_follow)) {
-      std::cout << "User " << FLAGS_username << " successfully followed " << FLAGS_follow << "." << std::endl;
+    if(client.follow(FLAGS_user, FLAGS_follow)) {
+      std::cout << "User " << FLAGS_user << " successfully followed " << FLAGS_follow << "." << std::endl;
     }
     else {
-      std::cout << "Attempt for " << FLAGS_username << " to follow " << FLAGS_follow << " failed." << std::endl;
+      std::cout << "Attempt for " << FLAGS_user << " to follow " << FLAGS_follow << " failed." << std::endl;
       return 1;
     }
   }
@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
   // monitor flag true, stream chirps
   if(FLAGS_monitor) {
     // TODO: handle failure
-    client.monitor();
+    client.monitor(FLAGS_user);
   }
 
   return 0;
