@@ -47,6 +47,16 @@ class ServiceLayerImpl final : public ServiceLayer::Service {
   // allow user to monitor followers
   Status monitor(ServerContext* context, const MonitorRequest* request,
                   MonitorReply* reply);
+ //TODO: serialize and move data to Key Value Store
+ private:
+  // set of users to validate registration/log-in
+  std::unordered_set<std::string> users;
+  // associates chirp_id with ids of replies (for read)
+  std::vector<std::vector<int> > replies;
+  // associate username to followers (for monitor and follow)
+  std::unordered_map<std::string, std::vector<std::string> > followers;
+  // associates username to following (for monitor and follow)
+  std::unordered_map<std::string, std::vector<std::string> > following;
 };
 
 #endif
