@@ -24,56 +24,49 @@ DEFINE_bool(monitor, false, "Streams new tweets from those currently followed");
 int main(int argc, char *argv[]) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   // create connection with service layer
-  ChirpClient client(grpc::CreateChannel(
-    "localhost:50002", grpc::InsecureChannelCredentials()));
-  
+  ChirpClient client(grpc::CreateChannel("localhost:50002", grpc::InsecureChannelCredentials()));
+
   // register flag provided, register username
   if(!FLAGS_register.empty()) {
     if(client.registeruser(FLAGS_register)) {
       std::cout << "Successfully registered user " << FLAGS_register << std::endl;
-    }
-    else {
+    } else {
       std::cout << "Attempt to register user " << FLAGS_register << " failed." << std::endl;
       return 1;
     }
   }
 
-  // chirp flag provided, make chirp
-  if(!FLAGS_chirp.empty()) {
-    if(FLAGS_user.empty()) {
-      std::cout << "Cannot make chirp without logging in user" << std::endl;
-      return 1;
+  // check if username is provided before performing tasks
+  if(!FLAGS_user.empty()) {
+    // chirp flag provided, make chirp
+    if(!FLAGS_chirp.empty()) {
+      // TODO: store Chirp reply message and handle
+      client.chirp(FLAGS_user, FLAGS_chirp, FLAGS_reply);
     }
 
-    // TODO: store Chirp reply message and handle
-    client.chirp(FLAGS_user, FLAGS_chirp, FLAGS_reply);
-  }
+    // follow flag provided, follow given user
+    if(!FLAGS_follow.empty()) {
+      if(client.follow(FLAGS_user, FLAGS_follow)) {
+        std::cout << "User " << FLAGS_user << " successfully followed " << FLAGS_follow << "." << std::endl;
+      } else {
+        std::cout << "Attempt for " << FLAGS_user << " to follow " << FLAGS_follow << " failed." << std::endl;
+        return 1;
+      }
+    }
 
-  // follow flag provided, follow given user
-  if(!FLAGS_follow.empty()) {
-    if(FLAGS_user.empty()) {
-      std::cout << "Cannot follow without logging in user" << std::endl;
-      return 1;
+    // monitor flag true, stream chirps
+    if(FLAGS_monitor) {
+      // TODO: handle failure
+      client.monitor(FLAGS_user);
     }
-    if(client.follow(FLAGS_user, FLAGS_follow)) {
-      std::cout << "User " << FLAGS_user << " successfully followed " << FLAGS_follow << "." << std::endl;
-    }
-    else {
-      std::cout << "Attempt for " << FLAGS_user << " to follow " << FLAGS_follow << " failed." << std::endl;
-      return 1;
-    }
+  } else if(!FLAGS_chirp.empty() || !FLAGS_follow.empty() || FLAGS_monitor) {
+    std::cout << "Cannot complete task without user logged in." << std::endl;
   }
 
   // read flag provided, read chirp thread
   if(!FLAGS_read.empty()) {
     // TODO: store return in variable, and handle failure
     client.read(FLAGS_read);
-  }
-
-  // monitor flag true, stream chirps
-  if(FLAGS_monitor) {
-    // TODO: handle failure
-    client.monitor(FLAGS_user);
   }
 
   return 0;
