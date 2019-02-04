@@ -23,11 +23,12 @@ Status ServiceLayerImpl::registeruser(ServerContext* context, const RegisterRequ
   // TODO: register with backend
   if(users.find(request->username()) == users.end()) {
     users.insert(request->username());
+    return Status::OK;
   }
   else {
     std::cout << "User is already in the database" << std::endl;
+    return Status::ALREADY_EXISTS;
   }
-  return Status::OK;
 }
 
 // allow user to send chirp and register with backend
