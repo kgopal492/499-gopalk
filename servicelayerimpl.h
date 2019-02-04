@@ -1,6 +1,10 @@
 #include "ServiceLayer.grpc.pb.h"
 #include "ServiceLayer.pb.h"
 
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+
 #include <grpcpp/grpcpp.h>
 
 using grpc::Server;
