@@ -1,4 +1,6 @@
-#include "service.h"
+#include "backendclient.h"
+#include "KeyValueStore.grpc.pb.h"
+#include "ServiceLayer.grpc.pb.h"
 #include "servicelayerimpl.h"
 
 #include <grpcpp/grpcpp.h>
@@ -15,8 +17,8 @@ using chirp::ChirpRequest;
 using chirp::ChirpReply;
 using chirp::FollowRequest;
 using chirp::FollowReply;
-using chirp::readREquest;
-using chirp::readReply;
+using chirp::ReadRequest;
+using chirp::ReadReply;
 using chirp::MonitorRequest;
 using chirp::MonitorReply;
 

@@ -5,7 +5,7 @@ BackendClient::BackendClient(std::shared_ptr<Channel> channel)
 
 // take `key` and `value` to insert into key-value table
 // and return whether insertion was successful
-bool BackendClient::put(const std::string& key, const std::string& value) {
+bool BackendClient::put(const std::string &key, const std::string &value) {
   // Send key and value to key-value store
   PutRequest request;
   request.set_key(key);
@@ -32,22 +32,7 @@ bool BackendClient::put(const std::string& key, const std::string& value) {
 
 // use `key` to return associated values
 std::string BackendClient::get(const std::string& key) {
-  GetRequest request;
-  request.set_key(key);
-
-  GetReply reply;
-
-  ClientContext context;
-
-  Status status = stub_->get(&context, request, &reply);
-
-  if (status.ok()) {
-    return reply.value();
-  } else {
-    std::cout << status.error_code() << ": " << status.error_message()
-              << std::endl;
-    return "";
-  }
+  //TODO: implement stream rpc 
 }
 
 // delete key value pair associate with `key` parameter

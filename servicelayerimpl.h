@@ -1,3 +1,8 @@
+#include "ServiceLayer.grpc.pb.h"
+#include "ServiceLayer.pb.h"
+
+#include <grpcpp/grpcpp.h>
+
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
@@ -10,10 +15,11 @@ using chirp::ChirpRequest;
 using chirp::ChirpReply;
 using chirp::FollowRequest;
 using chirp::FollowReply;
-using chirp::readREquest;
-using chirp::readReply;
+using chirp::ReadRequest;
+using chirp::ReadReply;
 using chirp::MonitorRequest;
 using chirp::MonitorReply;
+using chirp::ServiceLayer;
 
 #ifndef CHIRP_SERVICELAYERIMPL_H
 #define CHIRP_SERVICELAYERIMPL_H
@@ -36,7 +42,7 @@ class ServiceLayerImpl final : public ServiceLayer::Service {
                   ReadReply* reply) override;
   // allow user to monitor followers
   Status monitor(ServerContext* context, const MonitorRequest* request,
-                  MonitorReply* reply) override;
+                  MonitorReply* reply);
 };
 
 #endif
