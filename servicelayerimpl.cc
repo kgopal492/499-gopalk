@@ -21,8 +21,8 @@ using chirp::MonitorReply;
 Status ServiceLayerImpl::registeruser(ServerContext* context, const RegisterRequest* request,
                 RegisterReply* reply){
   // TODO: register with backend
-  if(users.find(request.username()) == users.end()) {
-    users.insert(username);
+  if(users.find(request->username()) == users.end()) {
+    users.insert(request->username());
   }
   else {
     std::cout << "User is already in the database" << std::endl;
