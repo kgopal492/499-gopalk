@@ -51,6 +51,8 @@ class ServiceLayerImpl final : public ServiceLayer::Service {
  private:
   // set of users to validate registration/log-in
   std::unordered_set<std::string> users;
+  // vector of all chirps stored in the location of their ID
+  std::vector<Chirp> chirps;
   // associates chirp_id with ids of replies (for read)
   std::vector<std::vector<int> > replies;
   // associate username to followers (for monitor and follow)

@@ -36,6 +36,18 @@ Status ServiceLayerImpl::registeruser(ServerContext* context, const RegisterRequ
 Status ServiceLayerImpl::chirp(ServerContext* context, const ChirpRequest* request,
                 ChirpReply* reply){
   // TODO: insert chirp into backend service
+  if(users.find(request->username()) == users.end()) {
+    return Status(StatusCode::INVALID_ARGUMENT, "user does not exist");
+  }
+  if(std::stoi(request->parent_id()) >= chirps.size()) {
+    return Status(StatusCode::INVALID_ARGUMENT, "parent_id not valid");
+  }
+  Chirp chirp;
+  chirp.set_username(request->username());
+  chirp.set_text(request->text());
+  chirp.set_id(std::to_string(chirps.size()));
+  chirp.set_parent_id(request->parent_id());
+  reply->set_allocated_chirp(&chirp);
   return Status::OK;
 }
 
