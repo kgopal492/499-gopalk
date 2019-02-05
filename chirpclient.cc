@@ -19,7 +19,7 @@ bool ChirpClient::registeruser(const std::string& username) {
 
   // Send the rpc
   Status status = stub_->registeruser(&context, request, &reply);
-
+  std::cout << "made it " << std::endl;
   // Determine if the status is ok, then process
   if (status.ok()) {
     return true;
@@ -45,6 +45,7 @@ Chirp ChirpClient::chirp(const std::string& username, const std::string& text, c
   Status status = stub_->chirp(&context, request, &reply);
 
   if (status.ok()) {
+    std::cout << "status ok" << std::endl;
     return reply.chirp();
   } else {
     std::cout << status.error_code() << ": " << status.error_message()

@@ -1,5 +1,7 @@
 #include "servicelayerimpl.h"
 
+#include <google/protobuf/util/time_util.h>
+
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
@@ -39,15 +41,22 @@ Status ServiceLayerImpl::chirp(ServerContext* context, const ChirpRequest* reque
   if(users.find(request->username()) == users.end()) {
     return Status(StatusCode::INVALID_ARGUMENT, "user does not exist");
   }
-  if(std::stoi(request->parent_id()) >= chirps.size()) {
+  if(!request->parent_id().empty() && std::stoi(request->parent_id()) >= chirps.size()) {
     return Status(StatusCode::INVALID_ARGUMENT, "parent_id not valid");
   }
-  Chirp chirp;
-  chirp.set_username(request->username());
-  chirp.set_text(request->text());
-  chirp.set_id(std::to_string(chirps.size()));
-  chirp.set_parent_id(request->parent_id());
-  reply->set_allocated_chirp(&chirp);
+  Chirp *chirp = new Chirp();
+  //google::protobuf::util::TimeUtil::Timestamp ts = google::protobuf::util::TimeUtil::GetCurrentTime();
+  int64_t seconds = google::protobuf::util::TimeUtil::TimestampToSeconds(google::protobuf::util::TimeUtil::GetCurrentTime());
+  int64_t useconds = google::protobuf::util::TimeUtil::TimestampToMicroseconds(google::protobuf::util::TimeUtil::GetCurrentTime());
+  chirp::Timestamp* ts = new chirp::Timestamp();
+  ts->set_seconds(seconds);
+  ts->set_useconds(useconds);
+  chirp->set_allocated_timestamp(ts);
+  chirp->set_username(request->username());
+  chirp->set_text(request->text());
+  chirp->set_id(std::to_string(chirps.size()));
+  chirp->set_parent_id(request->parent_id());
+  reply->set_allocated_chirp(chirp);
   return Status::OK;
 }
 
