@@ -4,6 +4,7 @@ using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
+using grpc::StatusCode;
 
 using chirp::Chirp;
 using chirp::RegisterRequest;
@@ -27,7 +28,7 @@ Status ServiceLayerImpl::registeruser(ServerContext* context, const RegisterRequ
   }
   else {
     std::cout << "User is already in the database" << std::endl;
-    return Status::ALREADY_EXISTS;
+    return Status(StatusCode::ALREADY_EXISTS, "username has already been taken");
   }
 }
 
