@@ -1,5 +1,8 @@
 #include "servicelayerimpl.h"
 
+#include <stack>
+#include <vector>
+
 #include <google/protobuf/util/time_util.h>
 
 using grpc::Server;
@@ -24,8 +27,14 @@ using chirp::MonitorReply;
 Status ServiceLayerImpl::registeruser(ServerContext* context, const RegisterRequest* request,
                 RegisterReply* reply){
   // TODO: register with backend
+  
+  // determine if username is 
   if(users.find(request->username()) == users.end()) {
     users.insert(request->username());
+    std::unordered_set<std::string> new_followers;
+    std::unordered_set<std::string> new_following;
+    followers.insert(std::pair<std::string, std::unordered_set<std::string> >(request->username(), new_followers));
+    following.insert(std::pair<std::string, std::unordered_set<std::string> >(request->username(), new_following));
     return Status::OK;
   }
   else {
@@ -41,22 +50,36 @@ Status ServiceLayerImpl::chirp(ServerContext* context, const ChirpRequest* reque
   if(users.find(request->username()) == users.end()) {
     return Status(StatusCode::INVALID_ARGUMENT, "user does not exist");
   }
-  if(!request->parent_id().empty() && std::stoi(request->parent_id()) >= chirps.size()) {
+  if( (request->parent_id() != "-1") && (std::stoi(request->parent_id()) >= chirps.size()) ) {
     return Status(StatusCode::INVALID_ARGUMENT, "parent_id not valid");
   }
+  // create new chirp
   Chirp *chirp = new Chirp();
-  //google::protobuf::util::TimeUtil::Timestamp ts = google::protobuf::util::TimeUtil::GetCurrentTime();
+  
+  // create timestamp for chirp
   int64_t seconds = google::protobuf::util::TimeUtil::TimestampToSeconds(google::protobuf::util::TimeUtil::GetCurrentTime());
   int64_t useconds = google::protobuf::util::TimeUtil::TimestampToMicroseconds(google::protobuf::util::TimeUtil::GetCurrentTime());
   chirp::Timestamp* ts = new chirp::Timestamp();
   ts->set_seconds(seconds);
   ts->set_useconds(useconds);
+
+  // set variables of chirp
   chirp->set_allocated_timestamp(ts);
   chirp->set_username(request->username());
   chirp->set_text(request->text());
   chirp->set_id(std::to_string(chirps.size()));
   chirp->set_parent_id(request->parent_id());
   reply->set_allocated_chirp(chirp);
+  chirps.push_back(*chirp);
+  
+  // create empty vector of replies for chirp
+  std::vector<int> reply_vector;
+  replies.push_back(reply_vector);
+
+  // add reply to original chirp id if reply flag specified
+  if((request->parent_id() != "-1")) {
+    replies[std::stoi(request->parent_id())].push_back(chirps.size());
+  }
   return Status::OK;
 }
 
@@ -64,6 +87,11 @@ Status ServiceLayerImpl::chirp(ServerContext* context, const ChirpRequest* reque
 Status ServiceLayerImpl::follow(ServerContext* context, const FollowRequest* request,
                 FollowReply* reply){
   //TODO: allow chirp to follow another user by calling backend service
+  if((users.find(request->username()) == users.end()) || (users.find(request->to_follow()) == users.end())) {
+    return Status(StatusCode::INVALID_ARGUMENT, "one of the usernames provided is invalid");
+  }
+  following[request->username()].insert(request->to_follow());
+  followers[request->to_follow()].insert(request->username());
   return Status::OK;
 }
 
@@ -71,6 +99,38 @@ Status ServiceLayerImpl::follow(ServerContext* context, const FollowRequest* req
 Status ServiceLayerImpl::read(ServerContext* context, const ReadRequest* request,
                 ReadReply* reply){
   //TODO: get thread from backend service and return
+ 
+  //check if valid chirp id is provided
+  std::cout << "in service layer" << std::endl;
+  if((std::stoi(request->chirp_id()) >= chirps.size()) || (std::stoi(request->chirp_id()) < 0) ) {
+    return Status(StatusCode::INVALID_ARGUMENT, "chirp id provided is invalid");
+  }
+  
+  //implement DFS to display all read chirps
+  std::vector<bool> visited(chirps.size(), false);
+  std::stack<int> dfs_stack;
+  dfs_stack.push(std::stoi(request->chirp_id()));
+  visited[std::stoi(request->chirp_id())] = true;
+  int tabs = 0;
+  std::cout << chirps[std::stoi(request->chirp_id())].text() << std::endl;
+  while(!dfs_stack.empty()) {
+    int curr_id = dfs_stack.top();
+    // if no unvisited children, pop
+    for(const int& reply : replies[curr_id]){
+      if(!visited[reply]) {
+	tabs++;
+	for(int i = 0; i<tabs; i++) {
+	  std::cout << "\t";
+	}
+	std::cout << chirps[reply].text() << std::endl;
+	visited[reply] = true;
+	dfs_stack.push(reply);
+	continue;
+      }
+    }
+    dfs_stack.pop();
+    tabs--;
+  }
   return Status::OK;
 }
 

@@ -56,9 +56,9 @@ class ServiceLayerImpl final : public ServiceLayer::Service {
   // associates chirp_id with ids of replies (for read)
   std::vector<std::vector<int> > replies;
   // associate username to followers (for monitor and follow)
-  std::unordered_map<std::string, std::vector<std::string> > followers;
+  std::unordered_map<std::string, std::unordered_set<std::string> > followers;
   // associates username to following (for monitor and follow)
-  std::unordered_map<std::string, std::vector<std::string> > following;
+  std::unordered_map<std::string, std::unordered_set<std::string> > following;
 };
 
 #endif
