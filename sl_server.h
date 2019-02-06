@@ -25,12 +25,12 @@ using chirp::MonitorRequest;
 using chirp::MonitorReply;
 using chirp::ServiceLayer;
 
-#ifndef CHIRP_SERVICELAYERIMPL_H
-#define CHIRP_SERVICELAYERIMPL_H
+#ifndef CHIRP_SL_SERVER_H
+#define CHIRP_SL_SERVER_H
 
 // implementation of service layer
 // takes request from command line clients
-class ServiceLayerImpl final : public ServiceLayer::Service {
+class SL_Server final : public ServiceLayer::Service {
  public:
   // register user with backend service
   Status registeruser(ServerContext* context, const RegisterRequest* request,
@@ -56,9 +56,9 @@ class ServiceLayerImpl final : public ServiceLayer::Service {
   // associates chirp_id with ids of replies (for read)
   std::vector<std::vector<int> > replies;
   // associate username to followers (for monitor and follow)
-  std::unordered_map<std::string, std::unordered_set<std::string> > followers;
+  std::unordered_map<std::string, std::vector<std::string> > followers;
   // associates username to following (for monitor and follow)
-  std::unordered_map<std::string, std::unordered_set<std::string> > following;
+  std::unordered_map<std::string, std::vector<std::string> > following;
 };
 
 #endif

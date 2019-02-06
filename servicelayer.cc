@@ -1,7 +1,7 @@
-#include "backendclient.h"
+#include "kvs_client.h"
 #include "KeyValueStore.grpc.pb.h"
 #include "ServiceLayer.grpc.pb.h"
-#include "servicelayerimpl.h"
+#include "sl_server.h"
 
 #include <grpcpp/grpcpp.h>
 
@@ -34,16 +34,16 @@ using chirp::DeleteReply;
 void run() {
   // run server on localhost:50002
   std::string server_address("0.0.0.0:50002");
-  ServiceLayerImpl service;
+  SL_Server service;
 
   ServerBuilder builder;
-  
+
   // listen on server address
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-  
+
   // Register as synchronous service
   builder.RegisterService(&service);
-  
+
   // assemble server
   std::unique_ptr<Server> server(builder.BuildAndStart());
   std::cout << "Server listening on " << server_address << std::endl;
@@ -53,6 +53,7 @@ void run() {
 }
 
 int main(int argc, char** argv) {
+  KVS_Client client(grpc::CreateChannel("localhost:50000", grpc::InsecureChannelCredentials()));
   run();
   return 0;
 }

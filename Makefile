@@ -23,12 +23,15 @@ PROTOS_PATH = ./protos
 
 vpath %.proto $(PROTOS_PATH)
 
-all: service chirp
+all: servicelayer chirp keyvaluestore
 
-service: KeyValueStore.pb.o KeyValueStore.grpc.pb.o ServiceLayer.pb.o ServiceLayer.grpc.pb.o servicelayerimpl.o backendclient.o service.o
+keyvaluestore: KeyValueStore.pb.o KeyValueStore.grpc.pb.o kvs_server.o keyvaluestore.o
+		$(CXX) $^ $(LDFLAGS) -o $@
+
+servicelayer: KeyValueStore.pb.o KeyValueStore.grpc.pb.o ServiceLayer.pb.o ServiceLayer.grpc.pb.o sl_server.o kvs_client.o servicelayer.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-chirp: ServiceLayer.pb.o ServiceLayer.grpc.pb.o chirpclient.o chirp.o
+chirp: ServiceLayer.pb.o ServiceLayer.grpc.pb.o sl_client.o chirp.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 %.grpc.pb.cc: %.proto
@@ -39,5 +42,3 @@ chirp: ServiceLayer.pb.o ServiceLayer.grpc.pb.o chirpclient.o chirp.o
 
 clean:
 	rm -f *.o *.pb.cc *.pb.h service chirp
-
-
