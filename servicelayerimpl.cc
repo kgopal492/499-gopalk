@@ -78,7 +78,7 @@ Status ServiceLayerImpl::chirp(ServerContext* context, const ChirpRequest* reque
 
   // add reply to original chirp id if reply flag specified
   if((request->parent_id() != "-1")) {
-    replies[std::stoi(request->parent_id())].push_back(chirps.size());
+    replies[std::stoi(request->parent_id())].push_back(chirps.size()-1);
   }
   return Status::OK;
 }
@@ -87,9 +87,13 @@ Status ServiceLayerImpl::chirp(ServerContext* context, const ChirpRequest* reque
 Status ServiceLayerImpl::follow(ServerContext* context, const FollowRequest* request,
                 FollowReply* reply){
   //TODO: allow chirp to follow another user by calling backend service
+  
+  // check that user and to_follow are valid users
   if((users.find(request->username()) == users.end()) || (users.find(request->to_follow()) == users.end())) {
     return Status(StatusCode::INVALID_ARGUMENT, "one of the usernames provided is invalid");
   }
+
+  // add user and to_follow to followers and following arrays
   following[request->username()].insert(request->to_follow());
   followers[request->to_follow()].insert(request->username());
   return Status::OK;
@@ -101,7 +105,6 @@ Status ServiceLayerImpl::read(ServerContext* context, const ReadRequest* request
   //TODO: get thread from backend service and return
  
   //check if valid chirp id is provided
-  std::cout << "in service layer" << std::endl;
   if((std::stoi(request->chirp_id()) >= chirps.size()) || (std::stoi(request->chirp_id()) < 0) ) {
     return Status(StatusCode::INVALID_ARGUMENT, "chirp id provided is invalid");
   }
@@ -110,16 +113,16 @@ Status ServiceLayerImpl::read(ServerContext* context, const ReadRequest* request
   std::vector<bool> visited(chirps.size(), false);
   std::stack<int> dfs_stack;
   dfs_stack.push(std::stoi(request->chirp_id()));
-  visited[std::stoi(request->chirp_id())] = true;
-  int tabs = 0;
   std::cout << chirps[std::stoi(request->chirp_id())].text() << std::endl;
+  visited[std::stoi(request->chirp_id())] = true;
+  int tabs = 0; // every reply is tabbed in
   while(!dfs_stack.empty()) {
     int curr_id = dfs_stack.top();
-    // if no unvisited children, pop
-    for(const int& reply : replies[curr_id]){
+    for(int i = 0; i < replies[curr_id].size(); i++){
+      int reply = replies[curr_id][i];
       if(!visited[reply]) {
 	tabs++;
-	for(int i = 0; i<tabs; i++) {
+	for(int j = 0; j<tabs; j++) {
 	  std::cout << "\t";
 	}
 	std::cout << chirps[reply].text() << std::endl;
