@@ -1,4 +1,8 @@
+#include "KeyValueStore.grpc.pb.h"
+
 #include <string>
+
+#include <grpcpp/grpcpp.h>
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -19,19 +23,19 @@ using chirp::KeyValueStore;
  // KVS_Server class supports 3 API calls
  // get(), put(), and delete(), and contains
  // a key-value-store
-class KVS_Server {
+class KVS_Server final : public KeyValueStore::Service {
  public:
   // put key and value pair in key-value store
-  Status put(ServerContext* context, const RegisterRequest* request,
-                  RegisterReply* reply) override;
+  Status put(ServerContext* context, const PutRequest* request,
+                  PutReply* reply) override;
 
   // get value based upon key string
-  Status get(ServerContext* context, const RegisterRequest* request,
-                  RegisterReply* reply) override;
+  Status get(ServerContext* context, const GetRequest* request,
+                  GetReply* reply);
 
   // delete key-value pair given key
-  Status delete(ServerContext* context, const RegisterRequest* request,
-                  RegisterReply* reply) override;
+  Status deletekey(ServerContext* context, const DeleteRequest* request,
+                  DeleteReply* reply) override;
 
  private:
   // store of key value pairs in KVS_Server

@@ -1,4 +1,3 @@
-#include "ServiceLayer.grpc.pb.h"
 #include "KeyValueStore.grpc.pb.h"
 
 #include <string>
@@ -16,7 +15,6 @@ using chirp::GetReply;
 using chirp::DeleteRequest;
 using chirp::DeleteReply;
 using chirp::KeyValueStore;
-using chirp::ServiceLayer;
 
 #ifndef CHIRP_KVS_CLIENT_H
 #define CHIRP_KVS_CLIENT_H

@@ -21,7 +21,7 @@ using chirp::ReadRequest;
 using chirp::ReadReply;
 using chirp::MonitorRequest;
 using chirp::MonitorReply;
-using chirp::ServiceLayer
+using chirp::ServiceLayer;
 
 using chirp::PutRequest;
 using chirp::PutReply;

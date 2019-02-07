@@ -33,6 +33,7 @@ bool KVS_Client::put(const std::string &key, const std::string &value) {
 // use `key` to return associated values
 std::string KVS_Client::get(const std::string& key) {
   //TODO: implement stream rpc
+  return "";
 }
 
 // delete key value pair associate with `key` parameter
