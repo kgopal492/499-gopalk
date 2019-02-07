@@ -27,14 +27,13 @@ using chirp::MonitorReply;
 Status ServiceLayerImpl::registeruser(ServerContext* context, const RegisterRequest* request,
                 RegisterReply* reply){
   // TODO: register with backend
-  
-  // determine if username is 
-  if(users.find(request->username()) == users.end()) {
-    users.insert(request->username());
-    std::unordered_set<std::string> new_followers;
-    std::unordered_set<std::string> new_following;
-    followers.insert(std::pair<std::string, std::unordered_set<std::string> >(request->username(), new_followers));
-    following.insert(std::pair<std::string, std::unordered_set<std::string> >(request->username(), new_following));
+  // TODO: serialize users, followers, following,  and send to key value store 
+  // determine if username has been taken 
+  if(users_.find(request->username()) == users_.end()) {
+    users_.insert(request->username());
+    std::unordered_set<std::string> empty_set;
+    followers_.insert(std::pair<std::string, std::unordered_set<std::string> >(request->username(), empty_set));
+    following_.insert(std::pair<std::string, std::unordered_set<std::string> >(request->username(), empty_set));
     return Status::OK;
   }
   else {
@@ -47,15 +46,16 @@ Status ServiceLayerImpl::registeruser(ServerContext* context, const RegisterRequ
 Status ServiceLayerImpl::chirp(ServerContext* context, const ChirpRequest* request,
                 ChirpReply* reply){
   // TODO: insert chirp into backend service
-  if(users.find(request->username()) == users.end()) {
+  // TODO: serialize chirps and replies and send to backend
+  if(users_.find(request->username()) == users_.end()) {
     return Status(StatusCode::INVALID_ARGUMENT, "user does not exist");
   }
-  if( (request->parent_id() != "-1") && (std::stoi(request->parent_id()) >= chirps.size()) ) {
+  if( (request->parent_id() != "-1") && (std::stoi(request->parent_id()) >= chirps_.size()) ) {
     return Status(StatusCode::INVALID_ARGUMENT, "parent_id not valid");
   }
   // create new chirp
   Chirp *chirp = new Chirp();
-  
+
   // create timestamp for chirp
   int64_t seconds = google::protobuf::util::TimeUtil::TimestampToSeconds(google::protobuf::util::TimeUtil::GetCurrentTime());
   int64_t useconds = google::protobuf::util::TimeUtil::TimestampToMicroseconds(google::protobuf::util::TimeUtil::GetCurrentTime());
@@ -67,18 +67,18 @@ Status ServiceLayerImpl::chirp(ServerContext* context, const ChirpRequest* reque
   chirp->set_allocated_timestamp(ts);
   chirp->set_username(request->username());
   chirp->set_text(request->text());
-  chirp->set_id(std::to_string(chirps.size()));
+  chirp->set_id(std::to_string(chirps_.size()));
   chirp->set_parent_id(request->parent_id());
   reply->set_allocated_chirp(chirp);
-  chirps.push_back(*chirp);
+  chirps_.push_back(*chirp);
   
-  // create empty vector of replies for chirp
+  // create empty vector of replies_ for chirp
   std::vector<int> reply_vector;
-  replies.push_back(reply_vector);
+  replies_.push_back(reply_vector);
 
   // add reply to original chirp id if reply flag specified
   if((request->parent_id() != "-1")) {
-    replies[std::stoi(request->parent_id())].push_back(chirps.size()-1);
+    replies_[std::stoi(request->parent_id())].push_back(chirps_.size()-1);
   }
   return Status::OK;
 }
@@ -88,44 +88,45 @@ Status ServiceLayerImpl::follow(ServerContext* context, const FollowRequest* req
                 FollowReply* reply){
   //TODO: allow chirp to follow another user by calling backend service
   
-  // check that user and to_follow are valid users
-  if((users.find(request->username()) == users.end()) || (users.find(request->to_follow()) == users.end())) {
+  // check that user and to_follow are valid users_
+  if((users_.find(request->username()) == users_.end()) || (users_.find(request->to_follow()) == users_.end())) {
     return Status(StatusCode::INVALID_ARGUMENT, "one of the usernames provided is invalid");
   }
 
-  // add user and to_follow to followers and following arrays
-  following[request->username()].insert(request->to_follow());
-  followers[request->to_follow()].insert(request->username());
+  // add user and to_follow to followers_ and following_ arrays
+  following_[request->username()].insert(request->to_follow());
+  followers_[request->to_follow()].insert(request->username());
   return Status::OK;
 }
 
 // allow user to read a thread
 Status ServiceLayerImpl::read(ServerContext* context, const ReadRequest* request,
                 ReadReply* reply){
-  //TODO: get thread from backend service and return
- 
+  // TODO: get thread from backend service and return
+  // TODO: remove output chirps in service layer and store in reply
+
   //check if valid chirp id is provided
-  if((std::stoi(request->chirp_id()) >= chirps.size()) || (std::stoi(request->chirp_id()) < 0) ) {
+  if((std::stoi(request->chirp_id()) >= chirps_.size()) || (std::stoi(request->chirp_id()) < 0) ) {
     return Status(StatusCode::INVALID_ARGUMENT, "chirp id provided is invalid");
   }
   
-  //implement DFS to display all read chirps
-  std::vector<bool> visited(chirps.size(), false);
+  //implement DFS to display all read chirps_
+  std::vector<bool> visited(chirps_.size(), false);
   std::stack<int> dfs_stack;
   dfs_stack.push(std::stoi(request->chirp_id()));
-  std::cout << chirps[std::stoi(request->chirp_id())].text() << std::endl;
+  std::cout << chirps_[std::stoi(request->chirp_id())].text() << std::endl;
   visited[std::stoi(request->chirp_id())] = true;
   int tabs = 0; // every reply is tabbed in
   while(!dfs_stack.empty()) {
     int curr_id = dfs_stack.top();
-    for(int i = 0; i < replies[curr_id].size(); i++){
-      int reply = replies[curr_id][i];
+    for(int i = 0; i < replies_[curr_id].size(); i++){
+      int reply = replies_[curr_id][i];
       if(!visited[reply]) {
 	tabs++;
 	for(int j = 0; j<tabs; j++) {
 	  std::cout << "\t";
 	}
-	std::cout << chirps[reply].text() << std::endl;
+	std::cout << chirps_[reply].text() << std::endl;
 	visited[reply] = true;
 	dfs_stack.push(reply);
 	continue;
@@ -137,9 +138,9 @@ Status ServiceLayerImpl::read(ServerContext* context, const ReadRequest* request
   return Status::OK;
 }
 
-// allow user to monitor followers
+// allow user to monitor followers_
 Status ServiceLayerImpl::monitor(ServerContext* context, const MonitorRequest* request,
                 MonitorReply* reply){
- //TODO: process user's following list and broadcast chirps
+ //TODO: process user's following_ list and broadcast chirps_
   return Status::OK;
 }
