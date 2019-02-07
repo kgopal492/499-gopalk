@@ -1,4 +1,4 @@
-#include "chirpclient.h"
+#include "sl_client.h"
 
 #include <iostream>
 #include <memory>
@@ -24,7 +24,7 @@ DEFINE_bool(monitor, false, "Streams new tweets from those currently followed");
 int main(int argc, char *argv[]) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   // create connection with service layer
-  ChirpClient client(grpc::CreateChannel("localhost:50002", grpc::InsecureChannelCredentials()));
+  SL_Client client(grpc::CreateChannel("localhost:50002", grpc::InsecureChannelCredentials()));
 
   // register flag provided, register username
   if(!FLAGS_register.empty()) {

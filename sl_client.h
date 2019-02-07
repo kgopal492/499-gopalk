@@ -26,15 +26,15 @@ using chirp::MonitorRequest;
 using chirp::MonitorReply;
 using chirp::ServiceLayer;
 
-#ifndef CHIRP_BACKENDCLIENT_H
-#define CHIRP_BACKENDCLIENT_H
+#ifndef CHIRP_SL_CLIENT_H
+#define CHIRP_SL_CLIENT_H
 
 // interface to send grpc request to the service layer
 // from the chirp client's command line
-class ChirpClient {
+class SL_Client {
  public:
   // constructor - initializes channel
-  ChirpClient(std::shared_ptr<Channel> channel);
+  SL_Client(std::shared_ptr<Channel> channel);
   // - registers username of new user with key-value store
   // - returns true if username is available
   bool registeruser(const std::string& username);

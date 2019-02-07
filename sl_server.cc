@@ -1,4 +1,4 @@
-#include "servicelayerimpl.h"
+#include "sl_server.h"
 
 #include <stack>
 #include <vector>
@@ -24,11 +24,11 @@ using chirp::MonitorRequest;
 using chirp::MonitorReply;
 
 // register user with backend service
-Status ServiceLayerImpl::registeruser(ServerContext* context, const RegisterRequest* request,
+Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* request,
                 RegisterReply* reply){
   // TODO: register with backend
-  
-  // determine if username is 
+
+  // determine if username is
   if(users.find(request->username()) == users.end()) {
     users.insert(request->username());
     std::unordered_set<std::string> new_followers;
@@ -44,7 +44,7 @@ Status ServiceLayerImpl::registeruser(ServerContext* context, const RegisterRequ
 }
 
 // allow user to send chirp and register with backend
-Status ServiceLayerImpl::chirp(ServerContext* context, const ChirpRequest* request,
+Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
                 ChirpReply* reply){
   // TODO: insert chirp into backend service
   if(users.find(request->username()) == users.end()) {
@@ -55,7 +55,7 @@ Status ServiceLayerImpl::chirp(ServerContext* context, const ChirpRequest* reque
   }
   // create new chirp
   Chirp *chirp = new Chirp();
-  
+
   // create timestamp for chirp
   int64_t seconds = google::protobuf::util::TimeUtil::TimestampToSeconds(google::protobuf::util::TimeUtil::GetCurrentTime());
   int64_t useconds = google::protobuf::util::TimeUtil::TimestampToMicroseconds(google::protobuf::util::TimeUtil::GetCurrentTime());
@@ -71,7 +71,7 @@ Status ServiceLayerImpl::chirp(ServerContext* context, const ChirpRequest* reque
   chirp->set_parent_id(request->parent_id());
   reply->set_allocated_chirp(chirp);
   chirps.push_back(*chirp);
-  
+
   // create empty vector of replies for chirp
   std::vector<int> reply_vector;
   replies.push_back(reply_vector);
@@ -84,10 +84,10 @@ Status ServiceLayerImpl::chirp(ServerContext* context, const ChirpRequest* reque
 }
 
 // allow user to follow another user (store in backend)
-Status ServiceLayerImpl::follow(ServerContext* context, const FollowRequest* request,
+Status SL_Server::follow(ServerContext* context, const FollowRequest* request,
                 FollowReply* reply){
   //TODO: allow chirp to follow another user by calling backend service
-  
+
   // check that user and to_follow are valid users
   if((users.find(request->username()) == users.end()) || (users.find(request->to_follow()) == users.end())) {
     return Status(StatusCode::INVALID_ARGUMENT, "one of the usernames provided is invalid");
@@ -100,15 +100,15 @@ Status ServiceLayerImpl::follow(ServerContext* context, const FollowRequest* req
 }
 
 // allow user to read a thread
-Status ServiceLayerImpl::read(ServerContext* context, const ReadRequest* request,
+Status SL_Server::read(ServerContext* context, const ReadRequest* request,
                 ReadReply* reply){
   //TODO: get thread from backend service and return
- 
+
   //check if valid chirp id is provided
   if((std::stoi(request->chirp_id()) >= chirps.size()) || (std::stoi(request->chirp_id()) < 0) ) {
     return Status(StatusCode::INVALID_ARGUMENT, "chirp id provided is invalid");
   }
-  
+
   //implement DFS to display all read chirps
   std::vector<bool> visited(chirps.size(), false);
   std::stack<int> dfs_stack;
@@ -138,7 +138,7 @@ Status ServiceLayerImpl::read(ServerContext* context, const ReadRequest* request
 }
 
 // allow user to monitor followers
-Status ServiceLayerImpl::monitor(ServerContext* context, const MonitorRequest* request,
+Status SL_Server::monitor(ServerContext* context, const MonitorRequest* request,
                 MonitorReply* reply){
  //TODO: process user's following list and broadcast chirps
   return Status::OK;
