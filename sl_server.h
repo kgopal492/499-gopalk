@@ -50,15 +50,15 @@ class SL_Server final : public ServiceLayer::Service {
  //TODO: serialize and move data to Key Value Store
  private:
   // set of users to validate registration/log-in
-  std::unordered_set<std::string> users;
+  std::unordered_set<std::string> users_;
   // vector of all chirps stored in the location of their ID
-  std::vector<Chirp> chirps;
+  std::vector<Chirp> chirps_;
   // associates chirp_id with ids of replies (for read)
-  std::vector<std::vector<int> > replies;
+  std::vector<std::vector<int> > replies_;
   // associate username to followers (for monitor and follow)
-  std::unordered_map<std::string, std::unordered_set<std::string> > followers;
+  std::unordered_map<std::string, std::unordered_set<std::string> > followers_;
   // associates username to following (for monitor and follow)
-  std::unordered_map<std::string, std::unordered_set<std::string> > following;
+  std::unordered_map<std::string, std::unordered_set<std::string> > following_;
 };
 
 #endif
