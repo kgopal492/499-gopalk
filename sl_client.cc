@@ -1,12 +1,12 @@
-#include "chirpclient.h"
+#include "sl_client.h"
 
 // constructor - initializes channel
-ChirpClient::ChirpClient(std::shared_ptr<Channel> channel)
+SL_Client::SL_Client(std::shared_ptr<Channel> channel)
     : stub_(ServiceLayer::NewStub(channel)) {}
 
 // - registers username of new user with key-value store
 // - returns true if username is available
-bool ChirpClient::registeruser(const std::string& username) {
+bool SL_Client::registeruser(const std::string& username) {
   // Send username to the service layer
   RegisterRequest request;
   request.set_username(username);
@@ -19,7 +19,7 @@ bool ChirpClient::registeruser(const std::string& username) {
 
   // Send the rpc
   Status status = stub_->registeruser(&context, request, &reply);
-  
+
   // Determine if the status is ok, then process
   if (status.ok()) {
     return true;
@@ -32,7 +32,7 @@ bool ChirpClient::registeruser(const std::string& username) {
 
 // - logs in user to command line
 // - returns true if user exists (and login is valid)
-Chirp ChirpClient::chirp(const std::string& username, const std::string& text, const std::string& parent_id) {
+Chirp SL_Client::chirp(const std::string& username, const std::string& text, const std::string& parent_id) {
   ChirpRequest request;
   request.set_username(username);
   request.set_text(text);
@@ -58,7 +58,7 @@ Chirp ChirpClient::chirp(const std::string& username, const std::string& text, c
 // - takes text to be chirped, and sends to key-value store
 // - returns true if chirp is successfully
 //   registered with key-value store
-bool ChirpClient::follow(const std::string& username, const std::string& to_follow) {
+bool SL_Client::follow(const std::string& username, const std::string& to_follow) {
   // Send username of client and username of chirp user to follow
   FollowRequest request;
   request.set_username(username);
@@ -81,7 +81,7 @@ bool ChirpClient::follow(const std::string& username, const std::string& to_foll
 
 // - takes chirpID of beginning of thread
 // - returns string of chirp thread
-const google::protobuf::RepeatedPtrField<chirp::Chirp> ChirpClient::read(const std::string& chirp_id) {
+const google::protobuf::RepeatedPtrField<chirp::Chirp> SL_Client::read(const std::string& chirp_id) {
   ReadRequest request;
   request.set_chirp_id(chirp_id);
 
@@ -102,7 +102,7 @@ const google::protobuf::RepeatedPtrField<chirp::Chirp> ChirpClient::read(const s
 }
 
 // - waits for service layer to send chirps of following users
-void ChirpClient::monitor(const std::string& username) {
+void SL_Client::monitor(const std::string& username) {
   MonitorRequest request;
   request.set_username(username);
 

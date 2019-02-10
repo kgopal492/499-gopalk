@@ -1,11 +1,11 @@
-#include "backendclient.h"
+#include "kvs_client.h"
 
-BackendClient::BackendClient(std::shared_ptr<Channel> channel)
+KVS_Client::KVS_Client(std::shared_ptr<Channel> channel)
     : stub_(KeyValueStore::NewStub(channel)) {}
 
 // take `key` and `value` to insert into key-value table
 // and return whether insertion was successful
-bool BackendClient::put(const std::string &key, const std::string &value) {
+bool KVS_Client::put(const std::string &key, const std::string &value) {
   // Send key and value to key-value store
   PutRequest request;
   request.set_key(key);
@@ -31,12 +31,13 @@ bool BackendClient::put(const std::string &key, const std::string &value) {
 }
 
 // use `key` to return associated values
-std::string BackendClient::get(const std::string& key) {
-  //TODO: implement stream rpc 
+std::string KVS_Client::get(const std::string& key) {
+  //TODO: implement stream rpc
+  return "";
 }
 
 // delete key value pair associate with `key` parameter
-bool BackendClient::deletekey(const std::string& key) {
+bool KVS_Client::deletekey(const std::string& key) {
   DeleteRequest request;
   request.set_key(key);
 

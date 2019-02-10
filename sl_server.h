@@ -25,12 +25,12 @@ using chirp::MonitorRequest;
 using chirp::MonitorReply;
 using chirp::ServiceLayer;
 
-#ifndef CHIRP_SERVICELAYERIMPL_H
-#define CHIRP_SERVICELAYERIMPL_H
+#ifndef CHIRP_SL_SERVER_H
+#define CHIRP_SL_SERVER_H
 
 // implementation of service layer
 // takes request from command line clients
-class ServiceLayerImpl final : public ServiceLayer::Service {
+class SL_Server final : public ServiceLayer::Service {
  public:
   // register user with backend service
   Status registeruser(ServerContext* context, const RegisterRequest* request,

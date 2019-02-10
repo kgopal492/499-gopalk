@@ -1,4 +1,4 @@
-#include "servicelayerimpl.h"
+#include "sl_server.h"
 
 #include <stack>
 #include <vector>
@@ -24,7 +24,7 @@ using chirp::MonitorRequest;
 using chirp::MonitorReply;
 
 // register user with backend service
-Status ServiceLayerImpl::registeruser(ServerContext* context, const RegisterRequest* request,
+Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* request,
                 RegisterReply* reply){
   // TODO: register with backend
   // TODO: serialize users, followers, following,  and send to key value store 
@@ -43,7 +43,7 @@ Status ServiceLayerImpl::registeruser(ServerContext* context, const RegisterRequ
 }
 
 // allow user to send chirp and register with backend
-Status ServiceLayerImpl::chirp(ServerContext* context, const ChirpRequest* request,
+Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
                 ChirpReply* reply){
   // TODO: insert chirp into backend service
   // TODO: serialize chirps and replies and send to backend
@@ -84,10 +84,9 @@ Status ServiceLayerImpl::chirp(ServerContext* context, const ChirpRequest* reque
 }
 
 // allow user to follow another user (store in backend)
-Status ServiceLayerImpl::follow(ServerContext* context, const FollowRequest* request,
+Status SL_Server::follow(ServerContext* context, const FollowRequest* request,
                 FollowReply* reply){
   //TODO: allow chirp to follow another user by calling backend service
-  
   // check that user and to_follow are valid users_
   if((users_.find(request->username()) == users_.end()) || (users_.find(request->to_follow()) == users_.end())) {
     return Status(StatusCode::INVALID_ARGUMENT, "one of the usernames provided is invalid");
@@ -100,7 +99,7 @@ Status ServiceLayerImpl::follow(ServerContext* context, const FollowRequest* req
 }
 
 // allow user to read a thread
-Status ServiceLayerImpl::read(ServerContext* context, const ReadRequest* request,
+Status SL_Server::read(ServerContext* context, const ReadRequest* request,
                 ReadReply* reply){
   // TODO: get thread from backend service and return
   // TODO: remove output chirps in service layer and store in reply
@@ -109,7 +108,7 @@ Status ServiceLayerImpl::read(ServerContext* context, const ReadRequest* request
   if((std::stoi(request->chirp_id()) >= chirps_.size()) || (std::stoi(request->chirp_id()) < 0) ) {
     return Status(StatusCode::INVALID_ARGUMENT, "chirp id provided is invalid");
   }
-  
+ 
   //implement DFS to display all read chirps_
   std::vector<bool> visited(chirps_.size(), false);
   std::stack<int> dfs_stack;
@@ -138,8 +137,8 @@ Status ServiceLayerImpl::read(ServerContext* context, const ReadRequest* request
   return Status::OK;
 }
 
-// allow user to monitor followers_
-Status ServiceLayerImpl::monitor(ServerContext* context, const MonitorRequest* request,
+// allow user to monitor followers
+Status SL_Server::monitor(ServerContext* context, const MonitorRequest* request,
                 MonitorReply* reply){
  //TODO: process user's following_ list and broadcast chirps_
   return Status::OK;
