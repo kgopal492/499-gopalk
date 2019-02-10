@@ -1,4 +1,5 @@
 *.pb.h
 *.o
 chirp
-service
+servicelayer
+keyvaluestore

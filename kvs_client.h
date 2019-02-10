@@ -1,4 +1,3 @@
-#include "ServiceLayer.grpc.pb.h"
 #include "KeyValueStore.grpc.pb.h"
 
 #include <string>
@@ -16,16 +15,15 @@ using chirp::GetReply;
 using chirp::DeleteRequest;
 using chirp::DeleteReply;
 using chirp::KeyValueStore;
-using chirp::ServiceLayer;
 
-#ifndef CHIRP_BACKENDCLIENT_H
-#define CHIRP_BACKENDCLIENT_H
+#ifndef CHIRP_KVS_CLIENT_H
+#define CHIRP_KVS_CLIENT_H
 
 // provides an interface for the service layer to
 // submit requests to the key-value store
-class BackendClient {
+class KVS_Client {
  public:
-  BackendClient(std::shared_ptr<Channel> channel);
+  KVS_Client(std::shared_ptr<Channel> channel);
   // take `key` and `value` to insert into key-value table
   // and return whether insertion was successful
   bool put(const std::string& key, const std::string& value);
@@ -33,7 +31,7 @@ class BackendClient {
   std::string get(const std::string& key);
   // delete key value pair associate with `key` parameter
   bool deletekey(const std::string& key);
- 
+
  private:
   std::unique_ptr<KeyValueStore::Stub> stub_;
 };
