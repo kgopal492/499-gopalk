@@ -20,7 +20,13 @@ using chirp::KeyValueStore;
 //   and return whether insertion was successful
 Status KVS_Server::put(ServerContext* context, const PutRequest* request,
                 PutReply* reply){
-  // TODO: put the key and value into data structure
+  std::map<std::string, std::string>::iterator key_it = key_value_pairs_.find(request->key());
+  if(key_it != key_value_pairs_.end()) {
+    key_value_pairs_[request->key()] = request->value();
+  }
+  else {
+    key_value_pairs_.insert({request->key(), request->value()});
+  }
   return Status::OK;
 }
 
@@ -28,14 +34,25 @@ Status KVS_Server::put(ServerContext* context, const PutRequest* request,
 // - use `key` to return associated values
 Status KVS_Server::get(ServerContext* context, const GetRequest* request,
                 GetReply* reply){
-  // TODO: get value assoc. with `key` from data structure
-  return Status::OK;
+  std::map<std::string, std::string>::iterator key_it = key_value_pairs_.find(request->key());
+  if(key_it != key_value_pairs_.end()) {
+    reply->set_value(key_value_pairs_[request->key()]);
+    return Status::OK;
+  }
+  else {
+    return Status(StatusCode::INVALID_ARGUMENT, "key not in key value store");
+  }
 }
 
 // delete function
 // - delete key value pair associate with `key` parameter
 Status KVS_Server::deletekey(ServerContext* context, const DeleteRequest* request,
                 DeleteReply* reply){
-  // TODO: delete key from key-value store
-  return Status::OK;
+  std::map<std::string, std::string>::iterator key_it = key_value_pairs_.find(request->key());
+  if(key_it != key_value_pairs_.end()) {
+    return Status::OK;
+  }
+  else {
+    return Status(StatusCode::INVALID_ARGUMENT, "key not in key value store");
+  }
 }
