@@ -23,6 +23,30 @@ using chirp::ReadReply;
 using chirp::MonitorRequest;
 using chirp::MonitorReply;
 
+SL_Server::SL_Server() : client_(grpc::CreateChannel("localhost:50000", grpc::InsecureChannelCredentials())) {
+  Users users;
+  std::string users_serial;
+  users.SerializeToString(&users_serial);
+
+  Chirps chirps;
+  std::string chirps_serial;
+  chirps.SerializeToString(&chirps_serial);
+
+  Replies replies;
+  std::string replies_serial;
+  replies.SerializeToString(&replies_serial);
+
+  FollowingMap following;
+  std::string following_serial;
+  following.SerializeToString(&following_serial);
+
+  client_.put("users", users_serial);
+  client_.put("chirps", chirps_serial);
+  client_.put("replies", replies_serial);
+  client_.put("following", following_serial);
+}
+
+
 // register user with backend service
 Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* request,
                 RegisterReply* reply){

@@ -1,3 +1,5 @@
+#include "Backend.grpc.pb.h"
+#include "Backend.pb.h"
 #include "KeyValueStore.grpc.pb.h"
 #include "KeyValueStore.pb.h"
 #include "ServiceLayer.grpc.pb.h"
@@ -9,6 +11,10 @@
 #include <vector>
 
 #include <grpcpp/grpcpp.h>
+
+using grpc::Channel;
+using grpc::ClientContext;
+using grpc::Status;
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -28,6 +34,10 @@ using chirp::MonitorRequest;
 using chirp::MonitorReply;
 using chirp::ServiceLayer;
 
+using chirp::Users;
+using chirp::Chirps;
+using chirp::Replies;
+using chirp::FollowingMap;
 #ifndef CHIRP_SL_SERVER_H
 #define CHIRP_SL_SERVER_H
 
@@ -36,8 +46,7 @@ using chirp::ServiceLayer;
 class SL_Server final : public ServiceLayer::Service {
  public:
   // constructor, initializes KVS_Client
-  SL_Server()
-  : client_(grpc::CreateChannel("localhost:50000", grpc::InsecureChannelCredentials())){}
+  SL_Server();
   // register user with backend service
   Status registeruser(ServerContext* context, const RegisterRequest* request,
                   RegisterReply* reply) override;
