@@ -37,6 +37,7 @@ using chirp::ServiceLayer;
 using chirp::Users;
 using chirp::Chirps;
 using chirp::Replies;
+using chirp::Reply;
 using chirp::Follow;
 using chirp::Following;
 using chirp::Followers;
