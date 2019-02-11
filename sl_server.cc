@@ -182,7 +182,7 @@ Status SL_Server::follow(ServerContext* context, const FollowRequest* request,
   //TODO: don't let someone follow themselves
 
   // check that user and to_follow are valid users_
-  bool valid_username = false;
+  bool valid_user = false;
   bool valid_to_follow = false;
   std::string users_serial = client_.get("users");
   Users users;
@@ -213,13 +213,13 @@ Status SL_Server::follow(ServerContext* context, const FollowRequest* request,
   followers.ParseFromString(followers_serial);
 
   for(int i = 0; i < following.following_size(); i++) {
-    if(following.following(i).username() == request->username) {
+    if(following.following(i).username() == request->username()) {
       following.following(i).add_follows(request->to_follow());
     }
   }
 
   for(int i = 0; i < followers.followers_size(); i++) {
-    if(followers.followers(i).username() == request->to_follow) {
+    if(followers.followers(i).username() == request->to_follow()) {
       followers.followers(i).add_follows(request->username());
     }
   }
