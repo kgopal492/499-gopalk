@@ -213,14 +213,14 @@ Status SL_Server::follow(ServerContext* context, const FollowRequest* request,
   followers.ParseFromString(followers_serial);
 
   for(int i = 0; i < following.following_size(); i++) {
-    if(following.following(i).username() == request->username()) {
-      following.following(i).add_follows(request->to_follow());
+    if((following.following(i)).username() == request->username()) {
+      (following.following(i)).add_follows(request->to_follow());
     }
   }
 
   for(int i = 0; i < followers.followers_size(); i++) {
-    if(followers.followers(i).username() == request->to_follow()) {
-      followers.followers(i).add_follows(request->username());
+    if((followers.followers(i)).username() == request->to_follow()) {
+      (followers.followers(i)).add_follows(request->username());
     }
   }
 
