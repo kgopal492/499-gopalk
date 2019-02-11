@@ -1,5 +1,8 @@
+#include "KeyValueStore.grpc.pb.h"
+#include "KeyValueStore.pb.h"
 #include "ServiceLayer.grpc.pb.h"
 #include "ServiceLayer.pb.h"
+#include "kvs_client.h"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -34,7 +37,7 @@ class SL_Server final : public ServiceLayer::Service {
  public:
   // constructor, initializes KVS_Client
   SL_Server()
-  : client_(grpc::CreateChannel("localhost:50000", grpc::InsecureChannelCredentials()));
+  : client_(grpc::CreateChannel("localhost:50000", grpc::InsecureChannelCredentials())){}
   // register user with backend service
   Status registeruser(ServerContext* context, const RegisterRequest* request,
                   RegisterReply* reply) override;
