@@ -16,8 +16,8 @@ using chirp::DeleteReply;
 using chirp::KeyValueStore;
 
 // `put` function
-// - take `key` and `value` to insert into key-value table
-//   and return whether insertion was successful
+// take `key` and `value` to insert into key-value table
+// and return whether insertion was successful
 Status KVS_Server::put(ServerContext* context, const PutRequest* request,
                 PutReply* reply){
   std::map<std::string, std::string>::iterator key_it = key_value_pairs_.find(request->key());
@@ -31,7 +31,7 @@ Status KVS_Server::put(ServerContext* context, const PutRequest* request,
 }
 
 // get function
-// - use `key` to return associated values
+// use `key` to return associated values
 Status KVS_Server::get(ServerContext* context, const GetRequest* request,
                 GetReply* reply){
   std::map<std::string, std::string>::iterator key_it = key_value_pairs_.find(request->key());
@@ -45,7 +45,7 @@ Status KVS_Server::get(ServerContext* context, const GetRequest* request,
 }
 
 // delete function
-// - delete key value pair associate with `key` parameter
+// delete key value pair associate with `key` parameter
 Status KVS_Server::deletekey(ServerContext* context, const DeleteRequest* request,
                 DeleteReply* reply){
   std::map<std::string, std::string>::iterator key_it = key_value_pairs_.find(request->key());
