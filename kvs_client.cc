@@ -37,20 +37,18 @@ std::string KVS_Client::get(const std::string& key) {
 
   std::shared_ptr<ClientReaderWriter<GetRequest, GetReply> > stream(
       stub_->get(&context));
-
-  std::thread writer([stream]() {
-    std::vector<GetRequest> getKeys{key};
-    for (const RouteNote& getKey : getKeys) {
-      stream->Write(getKey);
-    }
-    stream->WritesDone();
-  });
+  GetRequest getRequest;
+  getRequest.set_key(key);
+  std::vector<GetRequest> getKeys{getRequest};
+  for (const GetRequest& getKey : getKeys) {
+    stream->Write(getKey);
+  }
+  stream->WritesDone();
 
   GetReply getReply;
   while (stream->Read(&getReply)) {
     return getReply.value();
   }
-  writer.join();
   Status status = stream->Finish();
   if (!status.ok()) {
     std::cout << "Get request failed." << std::endl;

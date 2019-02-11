@@ -1,6 +1,6 @@
 HOST_SYSTEM = $(shell uname | cut -f 1 -d_)
 SYSTEM ?= $(HOST_SYSTEM)
-CXX = g++
+CXX = clang++
 CPPFLAGS += `pkg-config --cflags protobuf grpc`
 CXXFLAGS += -std=c++11
 ifeq ($(SYSTEM),Darwin)
@@ -41,4 +41,4 @@ chirp: ServiceLayer.pb.o ServiceLayer.grpc.pb.o sl_client.o chirp.o
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
 
 clean:
-	rm -f *.o *.pb.cc *.pb.h service chirp
+	rm -f *.o *.pb.cc *.pb.h keyvaluestore servicelayer chirp

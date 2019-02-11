@@ -7,6 +7,9 @@
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
+using grpc::ServerReader;
+using grpc::ServerReaderWriter;
+using grpc::ServerWriter;
 using grpc::Status;
 
 using chirp::PutRequest;
@@ -30,7 +33,7 @@ class KVS_Server final : public KeyValueStore::Service {
                   PutReply* reply) override;
 
   // get value based upon key string
-  Status get(ServerContext* context, const ServerReaderWriter<GetRequest, GetReply>* stream) override;
+  Status get(ServerContext* context, ServerReaderWriter<GetReply, GetRequest>* stream) override;
 
   // delete key-value pair given key
   Status deletekey(ServerContext* context, const DeleteRequest* request,

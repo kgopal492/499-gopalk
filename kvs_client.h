@@ -1,11 +1,13 @@
 #include "KeyValueStore.grpc.pb.h"
 
 #include <string>
+#include <thread>
 
 #include <grpcpp/grpcpp.h>
 
 using grpc::Channel;
 using grpc::ClientContext;
+using grpc::ClientReaderWriter;
 using grpc::Status;
 
 using chirp::PutRequest;

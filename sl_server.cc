@@ -59,9 +59,20 @@ Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* re
   // TODO: register with backend
   // TODO: serialize users, followers, following,  and send to key value store
   // determine if username has been taken
-  string users_serial = client_.get("users");
-  Users users =
-  if(users_.find(request->username()) == users_.end()) {
+  std::string users_serial = client_.get("users");
+  Users users;
+  users.ParseFromString(users_serial);
+  for(int i = 0; i < users.username_size(); i++) {
+    if(users.username(i) == request->username()) {
+      return Status(StatusCode::ALREADY_EXISTS, "username has already been taken");
+    }
+  }
+  users.add_username(request->username());
+  users.SerializeToString(&users_serial);
+  client_.put("users", users_serial);
+  return Status::OK;
+  /*
+  if(users.find(request->username()) == users_.end()) {
     users_.insert(request->username());
     std::unordered_set<std::string> empty_set;
     followers_.insert(std::pair<std::string, std::unordered_set<std::string> >(request->username(), empty_set));
@@ -72,6 +83,7 @@ Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* re
     std::cout << "User is already in the database" << std::endl;
     return Status(StatusCode::ALREADY_EXISTS, "username has already been taken");
   }
+  */
 }
 
 // allow user to send chirp and register with backend
