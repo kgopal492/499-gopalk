@@ -1,6 +1,7 @@
 #include "sl_server.h"
 
 #include <stack>
+#include <stdexcept>
 #include <vector>
 
 #include <google/protobuf/util/time_util.h>
@@ -61,7 +62,7 @@ SL_Server::SL_Server() : client_(grpc::CreateChannel("localhost:50000", grpc::In
 // register user with backend service
 Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* request,
                 RegisterReply* reply){
-  
+
   // get users list from KVS, check if username is taken before adding to list
   std::string users_serial = client_.get("users");
   Users users;
@@ -76,24 +77,27 @@ Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* re
   users.add_username(request->username());
   users.SerializeToString(&users_serial);
   client_.put("users", users_serial);
- 
+
   // Create empty list of followers and following for given user
   Follow follow;
   follow.set_username(request->username());
   std::string following_serial = client_.get("following");
   std::string followers_serial = client_.get("followers");
-  
+
   Following following;
   Followers followers;
 
   following.ParseFromString(following_serial);
   followers.ParseFromString(followers_serial);
-  
+
   Follow* newFollowing = following.add_following();
   Follow* newFollower = followers.add_followers();
 
   newFollowing->set_username(request->username());
   newFollower->set_username(request->username());
+
+  following.add_following(newFollowing);
+  followers.add_following(newFollowers);
 
   following.SerializeToString(&following_serial);
   followers.SerializeToString(&followers_serial);
@@ -111,12 +115,38 @@ Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
                 ChirpReply* reply){
   // TODO: insert chirp into backend service
   // TODO: serialize chirps and replies and send to backend
-  if(users_.find(request->username()) == users_.end()) {
+  // TODO: make sure atoi works for parent_id
+  // TODO: check if text is empty
+
+  // check that user exists in database
+  bool valid_user = false;
+  std::string users_serial = client_.get("users");
+  Users users;
+  users.ParseFromString(users_serial);
+  for(int i = 0; i < users.username_size(); i++) {
+    if(users.username(i) == request->username()) {
+      valid_user = true;
+      break;
+    }
+  }
+  if(!valid_user) {
     return Status(StatusCode::INVALID_ARGUMENT, "user does not exist");
   }
-  if( (request->parent_id() != "-1") && (std::stoi(request->parent_id()) >= chirps_.size()) ) {
+
+  // get chirps from database
+  std::string chirps_serial = client_.get("chirps");
+  Chirps chirps;
+  chirps.ParseFromString(chirps_serial);
+
+  // check that parent_id exists in database
+  try {
+    if( (request->parent_id() != "-1") && ((std::stoi(request->parent_id()) >= chirps.chirps_size()) || (std::stoi(request->parent_id()) < 0)) ) {
+      return Status(StatusCode::INVALID_ARGUMENT, "parent_id not valid");
+    }
+  } catch (std::invalid_argument&) {
     return Status(StatusCode::INVALID_ARGUMENT, "parent_id not valid");
   }
+
   // create new chirp
   Chirp *chirp = new Chirp();
 
@@ -131,18 +161,25 @@ Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
   chirp->set_allocated_timestamp(ts);
   chirp->set_username(request->username());
   chirp->set_text(request->text());
-  chirp->set_id(std::to_string(chirps_.size()));
+  chirp->set_id(std::to_string(chirps.chirps_size()));
   chirp->set_parent_id(request->parent_id());
   reply->set_allocated_chirp(chirp);
-  chirps_.push_back(*chirp);
 
-  // create empty vector of replies_ for chirp
-  std::vector<int> reply_vector;
-  replies_.push_back(reply_vector);
+  // add chirp to KVS
+  chirps.add_chirps(*chirp);
+  chirps.SerializeToString(&chirps_serial);
+  client_.put("chirps", chirps_serial);
 
   // add reply to original chirp id if reply flag specified
   if((request->parent_id() != "-1")) {
-    replies_[std::stoi(request->parent_id())].push_back(chirps_.size()-1);
+    std::string replies_serial = client_.get("replies");
+    Replies replies;
+    replies.ParseFromString(replies_serial);
+    Reply reply;
+    reply.set_username(request->username());
+    replies.add_allReplies(reply);
+    replies.SerializeToString(&replies_serial);
+    client_.put("replies", replies_serial);
   }
   return Status::OK;
 }
