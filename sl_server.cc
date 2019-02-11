@@ -110,10 +110,7 @@ Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* re
 // allow user to send chirp and register with backend
 Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
                 ChirpReply* reply){
-  // TODO: insert chirp into backend service
-  // TODO: serialize chirps and replies and send to backend
-  // TODO: make sure atoi works for parent_id
-  // TODO: check if text is empty
+  // TODO: check if text is empty - necessary?
 
   // check that user exists in database
   bool valid_user = false;
@@ -182,15 +179,57 @@ Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
 // allow user to follow another user (store in backend)
 Status SL_Server::follow(ServerContext* context, const FollowRequest* request,
                 FollowReply* reply){
-  //TODO: allow chirp to follow another user by calling backend service
+  //TODO: don't let someone follow themselves
+
   // check that user and to_follow are valid users_
-  if((users_.find(request->username()) == users_.end()) || (users_.find(request->to_follow()) == users_.end())) {
-    return Status(StatusCode::INVALID_ARGUMENT, "one of the usernames provided is invalid");
+  bool valid_username = false;
+  bool valid_to_follow = false;
+  std::string users_serial = client_.get("users");
+  Users users;
+  users.ParseFromString(users_serial);
+  for(int i = 0; i < users.username_size(); i++) {
+    if(users.username(i) == request->username()) {
+      valid_user = true;
+    }
+    if(users.username(i) == request->to_follow()) {
+      valid_to_follow = true;
+    }
+    if(valid_user && valid_to_follow) {
+      break;
+    }
+  }
+  if(!valid_user) {
+    return Status(StatusCode::INVALID_ARGUMENT, "at least one username provided does not exist");
   }
 
   // add user and to_follow to followers_ and following_ arrays
-  following_[request->username()].insert(request->to_follow());
-  followers_[request->to_follow()].insert(request->username());
+  std::string following_serial = client_.get("following");
+  std::string followers_serial = client_.get("followers");
+
+  Following following;
+  Followers followers;
+
+  following.ParseFromString(following_serial);
+  followers.ParseFromString(followers_serial);
+
+  for(int i = 0; i < following.following_size(); i++) {
+    if(following.following(i).username() == request->username) {
+      following.following(i).add_follows(request->to_follow());
+    }
+  }
+
+  for(int i = 0; i < followers.followers_size(); i++) {
+    if(followers.followers(i).username() == request->to_follow) {
+      followers.followers(i).add_follows(request->username());
+    }
+  }
+
+  following.SerializeToString(&following_serial);
+  followers.SerializeToString(&followers_serial);
+
+  client_.put("following", following_serial);
+  client_.put("followers", followers_serial);
+
   return Status::OK;
 }
 
