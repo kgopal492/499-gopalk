@@ -34,9 +34,12 @@ bool KVS_Client::put(const std::string &key, const std::string &value) {
 // TODO: change from stream to single request and reply
 std::string KVS_Client::get(const std::string& key) {
   ClientContext context;
-
+  
+  // create stream object to write and read keys and values from
   std::shared_ptr<ClientReaderWriter<GetRequest, GetReply> > stream(
       stub_->get(&context));
+  
+  // create GetRequest for given `key` and pass to kvs_server
   GetRequest getRequest;
   getRequest.set_key(key);
   std::vector<GetRequest> getKeys{getRequest};
@@ -45,6 +48,7 @@ std::string KVS_Client::get(const std::string& key) {
   }
   stream->WritesDone();
 
+  // read GetReplies from server
   GetReply getReply;
   while (stream->Read(&getReply)) {
     return getReply.value();

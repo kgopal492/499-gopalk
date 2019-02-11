@@ -20,7 +20,10 @@ using chirp::KeyValueStore;
 // and return whether insertion was successful
 Status KVS_Server::put(ServerContext* context, const PutRequest* request,
                 PutReply* reply){
+  // create iterator for `key_value_pairs` map
   std::map<std::string, std::string>::iterator key_it = key_value_pairs_.find(request->key());
+  
+  // if key exists in database, update value, else, insert new key value pair
   if(key_it != key_value_pairs_.end()) {
     key_value_pairs_[request->key()] = request->value();
   }
@@ -34,8 +37,12 @@ Status KVS_Server::put(ServerContext* context, const PutRequest* request,
 // use `key` to return associated values
 // TODO: change from multiple requests and replies to just one
 Status KVS_Server::get(ServerContext* context, ServerReaderWriter<GetReply, GetRequest>* stream) {
+  
+  // Read all GetRequests from stream
   GetRequest request;
   while (stream->Read(&request)) {
+    
+    // find key in `key_value_pairs`, if it exists add to reply, else return error status
     std::map<std::string, std::string>::iterator key_it = key_value_pairs_.find(request.key());
     if(key_it != key_value_pairs_.end()) {
       GetReply reply;

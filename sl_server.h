@@ -66,6 +66,7 @@ class SL_Server final : public ServiceLayer::Service {
                   MonitorReply* reply);
  //TODO: serialize and move data to Key Value Store
  private:
+  // client for keyvaluestore layer
   KVS_Client client_;
   // set of users to validate registration/log-in
   std::unordered_set<std::string> users_;
