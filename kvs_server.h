@@ -30,8 +30,7 @@ class KVS_Server final : public KeyValueStore::Service {
                   PutReply* reply) override;
 
   // get value based upon key string
-  Status get(ServerContext* context, const GetRequest* request,
-                  GetReply* reply);
+  Status get(ServerContext* context, const ServerReaderWriter<GetRequest, GetReply>* stream) override;
 
   // delete key-value pair given key
   Status deletekey(ServerContext* context, const DeleteRequest* request,

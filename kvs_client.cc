@@ -31,8 +31,30 @@ bool KVS_Client::put(const std::string &key, const std::string &value) {
 }
 
 // use `key` to return associated values
+// TODO: change from stream to single request and reply
 std::string KVS_Client::get(const std::string& key) {
-  //TODO: implement stream rpc
+  ClientContext context;
+
+  std::shared_ptr<ClientReaderWriter<GetRequest, GetReply> > stream(
+      stub_->get(&context));
+
+  std::thread writer([stream]() {
+    std::vector<GetRequest> getKeys{key};
+    for (const RouteNote& getKey : getKeys) {
+      stream->Write(getKey);
+    }
+    stream->WritesDone();
+  });
+
+  GetReply getReply;
+  while (stream->Read(&getReply)) {
+    return getReply.value();
+  }
+  writer.join();
+  Status status = stream->Finish();
+  if (!status.ok()) {
+    std::cout << "Get request failed." << std::endl;
+  }
   return "";
 }
 

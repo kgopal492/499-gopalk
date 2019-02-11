@@ -23,23 +23,29 @@ using chirp::ReadReply;
 using chirp::MonitorRequest;
 using chirp::MonitorReply;
 
+// construct SL_Server with KVS_Client and initialize KVS
 SL_Server::SL_Server() : client_(grpc::CreateChannel("localhost:50000", grpc::InsecureChannelCredentials())) {
+  // create empty Users object to store list of users
   Users users;
   std::string users_serial;
   users.SerializeToString(&users_serial);
 
+  // Create empty Chirps message to store all chirps
   Chirps chirps;
   std::string chirps_serial;
   chirps.SerializeToString(&chirps_serial);
 
+  // Create replies object to store chirp id to replies
   Replies replies;
   std::string replies_serial;
   replies.SerializeToString(&replies_serial);
 
+  // create following map to map username to list of following
   FollowingMap following;
   std::string following_serial;
   following.SerializeToString(&following_serial);
 
+  // store empty data structures in key value store
   client_.put("users", users_serial);
   client_.put("chirps", chirps_serial);
   client_.put("replies", replies_serial);
@@ -52,7 +58,9 @@ Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* re
                 RegisterReply* reply){
   // TODO: register with backend
   // TODO: serialize users, followers, following,  and send to key value store
-  // determine if username has been taken 
+  // determine if username has been taken
+  string users_serial = client_.get("users");
+  Users users =
   if(users_.find(request->username()) == users_.end()) {
     users_.insert(request->username());
     std::unordered_set<std::string> empty_set;

@@ -32,16 +32,22 @@ Status KVS_Server::put(ServerContext* context, const PutRequest* request,
 
 // get function
 // use `key` to return associated values
-Status KVS_Server::get(ServerContext* context, const GetRequest* request,
-                GetReply* reply){
-  std::map<std::string, std::string>::iterator key_it = key_value_pairs_.find(request->key());
-  if(key_it != key_value_pairs_.end()) {
-    reply->set_value(key_value_pairs_[request->key()]);
-    return Status::OK;
+// TODO: change from multiple requests and replies to just one
+Status KVS_Server::get(ServerContext* context, const ServerReaderWriter<GetRequest, GetReply>* stream) {
+  GetRequest request;
+  while (stream->Read(&request)) {
+    std::map<std::string, std::string>::iterator key_it = key_value_pairs_.find(request->key());
+    if(key_it != key_value_pairs_.end()) {
+      GetReply reply;
+      reply->set_value(key_value_pairs_[request->key()]);
+      stream->Write(reply);
+    }
+    else {
+      return Status(StatusCode::INVALID_ARGUMENT, "key: " + request->key() + " not in key value store");
+    }
   }
-  else {
-    return Status(StatusCode::INVALID_ARGUMENT, "key not in key value store");
-  }
+
+  return Status::OK;
 }
 
 // delete function
