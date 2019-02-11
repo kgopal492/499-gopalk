@@ -27,7 +27,7 @@ using chirp::MonitorReply;
 Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* request,
                 RegisterReply* reply){
   // TODO: register with backend
-  // TODO: serialize users, followers, following,  and send to key value store 
+  // TODO: serialize users, followers, following,  and send to key value store
   // determine if username has been taken 
   if(users_.find(request->username()) == users_.end()) {
     users_.insert(request->username());
@@ -71,7 +71,7 @@ Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
   chirp->set_parent_id(request->parent_id());
   reply->set_allocated_chirp(chirp);
   chirps_.push_back(*chirp);
-  
+
   // create empty vector of replies_ for chirp
   std::vector<int> reply_vector;
   replies_.push_back(reply_vector);
@@ -108,7 +108,7 @@ Status SL_Server::read(ServerContext* context, const ReadRequest* request,
   if((std::stoi(request->chirp_id()) >= chirps_.size()) || (std::stoi(request->chirp_id()) < 0) ) {
     return Status(StatusCode::INVALID_ARGUMENT, "chirp id provided is invalid");
   }
- 
+
   //implement DFS to display all read chirps_
   std::vector<bool> visited(chirps_.size(), false);
   std::stack<int> dfs_stack;

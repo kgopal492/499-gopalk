@@ -32,6 +32,9 @@ using chirp::ServiceLayer;
 // takes request from command line clients
 class SL_Server final : public ServiceLayer::Service {
  public:
+  // constructor, initializes KVS_Client
+  SL_Server()
+  : client_(grpc::CreateChannel("localhost:50000", grpc::InsecureChannelCredentials()));
   // register user with backend service
   Status registeruser(ServerContext* context, const RegisterRequest* request,
                   RegisterReply* reply) override;
@@ -49,6 +52,7 @@ class SL_Server final : public ServiceLayer::Service {
                   MonitorReply* reply);
  //TODO: serialize and move data to Key Value Store
  private:
+  KVS_Client client_;
   // set of users to validate registration/log-in
   std::unordered_set<std::string> users_;
   // vector of all chirps stored in the location of their ID
