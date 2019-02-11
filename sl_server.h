@@ -37,7 +37,9 @@ using chirp::ServiceLayer;
 using chirp::Users;
 using chirp::Chirps;
 using chirp::Replies;
-using chirp::FollowingMap;
+using chirp::Follow;
+using chirp::Following;
+using chirp::Followers;
 #ifndef CHIRP_SL_SERVER_H
 #define CHIRP_SL_SERVER_H
 

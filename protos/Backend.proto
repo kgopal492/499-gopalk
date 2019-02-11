@@ -16,10 +16,15 @@ message Replies {
   map<int64, Chirps> replies = 1;
 }
 
-message Following {
-  repeated string username = 1;
+message Follow {
+  string username = 1;
+  repeated string follows = 2;
 }
 
-message FollowingMap {
-  map<string, Following> user_to_following = 1;
+message Following {
+  repeated Follow following = 1;
+}
+
+message Followers {
+  repeated Follow followers = 1;
 }

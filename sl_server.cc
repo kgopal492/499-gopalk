@@ -41,24 +41,28 @@ SL_Server::SL_Server() : client_(grpc::CreateChannel("localhost:50000", grpc::In
   replies.SerializeToString(&replies_serial);
 
   // create following map to map username to list of following
-  FollowingMap following;
+  Following following;
   std::string following_serial;
   following.SerializeToString(&following_serial);
 
+  // create follower list to map username to followers
+  Followers followers;
+  std::string followers_serial;
+  followers.SerializeToString(&followers_serial);
   // store empty data structures in key value store
   client_.put("users", users_serial);
   client_.put("chirps", chirps_serial);
   client_.put("replies", replies_serial);
   client_.put("following", following_serial);
+  client_.put("followers", followers_serial);
 }
 
 
 // register user with backend service
 Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* request,
                 RegisterReply* reply){
-  // TODO: register with backend
-  // TODO: serialize users, followers, following,  and send to key value store
-  // determine if username has been taken
+  
+  // get users list from KVS, check if username is taken before adding to list
   std::string users_serial = client_.get("users");
   Users users;
   users.ParseFromString(users_serial);
@@ -67,23 +71,39 @@ Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* re
       return Status(StatusCode::ALREADY_EXISTS, "username has already been taken");
     }
   }
+
+  // put `users` back in database
   users.add_username(request->username());
   users.SerializeToString(&users_serial);
   client_.put("users", users_serial);
+ 
+  // Create empty list of followers and following for given user
+  Follow follow;
+  follow.set_username(request->username());
+  std::string following_serial = client_.get("following");
+  std::string followers_serial = client_.get("followers");
+  
+  Following following;
+  Followers followers;
+
+  following.ParseFromString(following_serial);
+  followers.ParseFromString(followers_serial);
+  
+  Follow* newFollowing = following.add_following();
+  Follow* newFollower = followers.add_followers();
+
+  newFollowing->set_username(request->username());
+  newFollower->set_username(request->username());
+
+  following.SerializeToString(&following_serial);
+  followers.SerializeToString(&followers_serial);
+
+  client_.put("following", following_serial);
+  client_.put("followers", followers_serial);
+
+  std::cout << following_serial << std::endl;
+  std::cout << followers_serial << std::endl;
   return Status::OK;
-  /*
-  if(users.find(request->username()) == users_.end()) {
-    users_.insert(request->username());
-    std::unordered_set<std::string> empty_set;
-    followers_.insert(std::pair<std::string, std::unordered_set<std::string> >(request->username(), empty_set));
-    following_.insert(std::pair<std::string, std::unordered_set<std::string> >(request->username(), empty_set));
-    return Status::OK;
-  }
-  else {
-    std::cout << "User is already in the database" << std::endl;
-    return Status(StatusCode::ALREADY_EXISTS, "username has already been taken");
-  }
-  */
 }
 
 // allow user to send chirp and register with backend
