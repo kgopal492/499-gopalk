@@ -28,7 +28,7 @@ all: keyvaluestore servicelayer chirp
 keyvaluestore: KeyValueStore.pb.o KeyValueStore.grpc.pb.o kvs_server.o keyvaluestore.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-servicelayer: KeyValueStore.pb.o KeyValueStore.grpc.pb.o ServiceLayer.pb.o ServiceLayer.grpc.pb.o sl_server.o kvs_client.o servicelayer.o
+servicelayer: KeyValueStore.pb.o KeyValueStore.grpc.pb.o ServiceLayer.pb.o ServiceLayer.grpc.pb.o Backend.pb.o Backend.grpc.pb.o sl_server.o kvs_client.o servicelayer.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 chirp: ServiceLayer.pb.o ServiceLayer.grpc.pb.o sl_client.o chirp.o

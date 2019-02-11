@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+import "ServiceLayer.proto";
+
+package chirp;
+
+message Users {
+  repeated string username = 1;
+}
+
+message Chirps {
+  repeated Chirp chirps = 1;
+}
+
+message Replies {
+  map<int64, Chirps> replies = 1;
+}
+
+message Following {
+  repeated string username = 1;
+}
+
+message FollowingMap {
+  map<string, Following> user_to_following = 1;
+}
