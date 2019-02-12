@@ -240,34 +240,47 @@ Status SL_Server::read(ServerContext* context, const ReadRequest* request,
   // TODO: remove output chirps in service layer and store in reply
 
   //check if valid chirp id is provided
-  if((std::stoi(request->chirp_id()) >= chirps_.size()) || (std::stoi(request->chirp_id()) < 0) ) {
-    return Status(StatusCode::INVALID_ARGUMENT, "chirp id provided is invalid");
+  std::string chirps_serial = client_.get("chirps");
+  Chirps chirps;
+  chirps.ParseFromString(chirps_serial);
+  try {
+    if((std::stoi(request->chirp_id()) < 0) || (std::stoi(request->chirp_id()) >= chirps.chirps_size()));
+  } catch (std::invalid_argument&) {
+    return Status(StatusCode::INVALID_ARGUMENT, "invalid chirp id");
   }
 
-  //implement DFS to display all read chirps_
+  // get all replies from database
+  std::string replies_serial = client_.get("replies");
+  Replies replies;
+  replies.ParseFromString(replies_serial);
+
+  // convert replies to vector of vector
+  std::vector<std::vector<int> > replies_vec;
+  for(int i = 0; i < replies.allreplies_size(); i++) {
+    std::vector<int> chirp_replies;
+    for(int j = 0; j < replies.allreplies(i).replies_size(); j++) {
+      chirp_replies.push_back(replies.allreplies(i).replies(j));
+    }
+    replies_vec.push_back(chirp_replies);
+  }
+  //implement DFS to display all read chirps
   std::vector<bool> visited(chirps_.size(), false);
   std::stack<int> dfs_stack;
   dfs_stack.push(std::stoi(request->chirp_id()));
-  std::cout << chirps_[std::stoi(request->chirp_id())].text() << std::endl;
+  &chirps.chirps(std::stoi(request->chirp_id())) = reply->add_chirps();
   visited[std::stoi(request->chirp_id())] = true;
-  int tabs = 0; // every reply is tabbed in
   while(!dfs_stack.empty()) {
     int curr_id = dfs_stack.top();
-    for(int i = 0; i < replies_[curr_id].size(); i++){
-      int reply = replies_[curr_id][i];
+    for(int i = 0; i < replies_vec[curr_id].size(); i++){
+      int reply = replies_vec[curr_id][i];
       if(!visited[reply]) {
-	tabs++;
-	for(int j = 0; j<tabs; j++) {
-	  std::cout << "\t";
-	}
-	std::cout << chirps_[reply].text() << std::endl;
-	visited[reply] = true;
-	dfs_stack.push(reply);
-	continue;
+        &chirps.chirps(reply) = reply->add_chirps();
+      	visited[reply] = true;
+      	dfs_stack.push(reply);
+      	continue;
       }
     }
     dfs_stack.pop();
-    tabs--;
   }
   return Status::OK;
 }
