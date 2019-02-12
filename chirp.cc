@@ -66,7 +66,10 @@ int main(int argc, char *argv[]) {
   // read flag provided, read chirp thread
   if(!FLAGS_read.empty()) {
     // TODO: store return in variable, and handle failure
-    client.read(FLAGS_read);
+    const google::protobuf::RepeatedPtrField<chirp::Chirp> thread = client.read(FLAGS_read);
+    for(int i = 0; i < thread.chirps_size(); i++) {
+      std::cout << thread.chirps(i).text() << std::endl;
+    }
   }
 
   return 0;
