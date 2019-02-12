@@ -102,8 +102,6 @@ Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* re
   client_.put("following", following_serial);
   client_.put("followers", followers_serial);
 
-  std::cout << following_serial << std::endl;
-  std::cout << followers_serial << std::endl;
   return Status::OK;
 }
 
@@ -142,7 +140,7 @@ Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
   }
 
   // create new chirp
-  Chirp *chirp = chirps.add_chirps();
+  Chirp *chirp = new Chirp();
 
   // create timestamp for chirp
   int64_t seconds = google::protobuf::util::TimeUtil::TimestampToSeconds(google::protobuf::util::TimeUtil::GetCurrentTime());
@@ -160,6 +158,7 @@ Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
   reply->set_allocated_chirp(chirp);
 
   // add chirp to KVS
+  chirp = chirps.add_chirps();
   chirps.SerializeToString(&chirps_serial);
   client_.put("chirps", chirps_serial);
 
@@ -168,8 +167,9 @@ Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
     std::string replies_serial = client_.get("replies");
     Replies replies;
     replies.ParseFromString(replies_serial);
-    Reply* reply = replies.add_allreplies(); ;
-    reply->set_id(std::stoi(chirp->id()));
+    Reply* newReply = new Reply();
+    newReply = replies.add_allreplies(); ;
+    newReply->set_id(std::stoi(chirp->id()));
     replies.SerializeToString(&replies_serial);
     client_.put("replies", replies_serial);
   }
