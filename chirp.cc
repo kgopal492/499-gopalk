@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <memory>
+#include <stack>
 #include <string>
 
 #include <gflags/gflags.h>
@@ -66,7 +67,25 @@ int main(int argc, char *argv[]) {
   // read flag provided, read chirp thread
   if(!FLAGS_read.empty()) {
     // TODO: store return in variable, and handle failure
-    client.read(FLAGS_read);
+    google::protobuf::RepeatedPtrField<chirp::Chirp> chirps = client.read(FLAGS_read);
+    std::stack<std::string> parent_id;
+    if(chirps.size() > 0) {
+      std::cout << chirps[0].text() << std::endl;
+      parent_id.push(chirps[0].id());
+    }
+    int tabs = 1;
+    for(int i = 1; i < chirps.size(); i++) {
+      while(chirps[i].parent_id() != parent_id.top()) {
+        parent_id.pop();
+	tabs--;
+      }
+      for(int j = 0; j < tabs; j++) {
+        std::cout << "|   ";
+      }
+      std::cout << chirps[i].text() << std::endl;
+      parent_id.push(chirps[i].id());
+      tabs++;
+    }
   }
 
   return 0;
