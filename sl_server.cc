@@ -101,9 +101,7 @@ Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* re
 
   client_.put("following", following_serial);
   client_.put("followers", followers_serial);
-
-  std::cout << following_serial << std::endl;
-  std::cout << followers_serial << std::endl;
+  
   return Status::OK;
 }
 
@@ -131,7 +129,6 @@ Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
   std::string chirps_serial = client_.get("chirps");
   Chirps chirps;
   chirps.ParseFromString(chirps_serial);
-
   // check that parent_id exists in database
   try {
     if( (request->parent_id() != "-1") && ((std::stoi(request->parent_id()) >= chirps.chirps_size()) || (std::stoi(request->parent_id()) < 0)) ) {
@@ -143,6 +140,7 @@ Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
 
   // create new chirp
   Chirp *chirp = chirps.add_chirps();
+  chirp = new Chirp();
 
   // create timestamp for chirp
   int64_t seconds = google::protobuf::util::TimeUtil::TimestampToSeconds(google::protobuf::util::TimeUtil::GetCurrentTime());
@@ -168,8 +166,9 @@ Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
     std::string replies_serial = client_.get("replies");
     Replies replies;
     replies.ParseFromString(replies_serial);
-    Reply* reply = replies.add_allreplies(); ;
-    reply->set_id(std::stoi(chirp->id()));
+    Reply* newReply = replies.add_allreplies();
+    newReply = new Reply();
+    newReply->set_id(std::stoi(chirp->id()));
     replies.SerializeToString(&replies_serial);
     client_.put("replies", replies_serial);
   }
@@ -240,10 +239,65 @@ Status SL_Server::read(ServerContext* context, const ReadRequest* request,
   // TODO: remove output chirps in service layer and store in reply
 
   //check if valid chirp id is provided
-  if((std::stoi(request->chirp_id()) >= chirps_.size()) || (std::stoi(request->chirp_id()) < 0) ) {
-    return Status(StatusCode::INVALID_ARGUMENT, "chirp id provided is invalid");
+  std::string chirps_serial = client_.get("chirps");
+  Chirps chirps;
+  chirps.ParseFromString(chirps_serial);
+  try {
+    if((std::stoi(request->chirp_id()) < 0) || (std::stoi(request->chirp_id()) >= chirps.chirps_size())) {
+      return Status(StatusCode::INVALID_ARGUMENT, "invalid chirp id");
+    }
+  } catch (std::invalid_argument&) {
+    return Status(StatusCode::INVALID_ARGUMENT, "invalid chirp id");
   }
 
+  // get all replies from database
+  std::string replies_serial = client_.get("replies");
+  Replies replies;
+  replies.ParseFromString(replies_serial);
+
+  // convert replies to vector of vector
+  std::vector<std::vector<int> > replies_vec;
+  for(int i = 0; i < replies.allreplies_size(); i++) {
+    std::vector<int> chirp_replies;
+    for(int j = 0; j < replies.allreplies(i).replies_size(); j++) {
+      chirp_replies.push_back(replies.allreplies(i).replies(j));
+    }
+    replies_vec.push_back(chirp_replies);
+  }
+  //implement DFS to display all read chirps
+  std::vector<bool> visited(chirps_.size(), false);
+  std::stack<int> dfs_stack;
+  dfs_stack.push(std::stoi(request->chirp_id()));
+  Chirp *chirp = reply->add_chirps();
+  *chirp = chirps.chirps(std::stoi(request->chirp_id()));
+  visited[std::stoi(request->chirp_id())] = true;
+  while(!dfs_stack.empty()) {
+    int curr_id = dfs_stack.top();
+    for(int i = 0; i < replies_vec[curr_id].size(); i++){
+      int reply_id = replies_vec[curr_id][i];
+      if(!visited[reply_id]) {
+	Chirp *chirpReply = reply->add_chirps();
+        *chirpReply = chirps.chirps(reply_id); 
+      	visited[reply_id] = true;
+      	dfs_stack.push(reply_id);
+      	continue;
+      }
+    }
+    dfs_stack.pop();
+  }
+  return Status::OK;
+
+  /*
+  // get chirps from database
+  std::string chirps_serial = client_.get("chirps");
+  Chirps chirps;
+  chirps.ParseFromString(chirps_serial);
+  //check if valid chirp id is provided
+  if((std::stoi(request->chirp_id()) >= chirps.chirps_size()) || (std::stoi(request->chirp_id()) < 0) ) {
+    return Status(StatusCode::INVALID_ARGUMENT, "chirp id provided is invalid");
+  }
+  
+  std::cout << "1" << std::endl; //TODO: Delete
   //implement DFS to display all read chirps_
   std::vector<bool> visited(chirps_.size(), false);
   std::stack<int> dfs_stack;
@@ -270,6 +324,7 @@ Status SL_Server::read(ServerContext* context, const ReadRequest* request,
     tabs--;
   }
   return Status::OK;
+  */
 }
 
 // allow user to monitor followers
