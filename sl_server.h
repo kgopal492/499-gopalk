@@ -19,6 +19,7 @@ using grpc::Status;
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
+using grpc::ServerWriter;
 using grpc::Status;
 
 using chirp::Chirp;
@@ -64,21 +65,13 @@ class SL_Server final : public ServiceLayer::Service {
                   ReadReply* reply) override;
   // allow user to monitor followers
   Status monitor(ServerContext* context, const MonitorRequest* request,
-                  MonitorReply* reply);
+                  ServerWriter<MonitorReply>* writer) override;
  //TODO: serialize and move data to Key Value Store
  private:
   // client for keyvaluestore layer
   KVS_Client client_;
-  // set of users to validate registration/log-in
-  std::unordered_set<std::string> users_;
-  // vector of all chirps stored in the location of their ID
-  std::vector<Chirp> chirps_;
-  // associates chirp_id with ids of replies (for read)
-  std::vector<std::vector<int> > replies_;
-  // associate username to followers (for monitor and follow)
-  std::unordered_map<std::string, std::unordered_set<std::string> > followers_;
-  // associates username to following (for monitor and follow)
-  std::unordered_map<std::string, std::unordered_set<std::string> > following_;
+  // mutex to lock sl for monitor and other functions
+  std::mutex mtx_;
 };
 
 #endif

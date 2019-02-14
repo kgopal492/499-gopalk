@@ -9,6 +9,7 @@
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
+using grpc::ServerWriter;
 using grpc::Status;
 using grpc::StatusCode;
 
@@ -62,7 +63,7 @@ SL_Server::SL_Server() : client_(grpc::CreateChannel("localhost:50000", grpc::In
 // register user with backend service
 Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* request,
                 RegisterReply* reply){
-
+   mtx_.lock();
   // get users list from KVS, check if username is taken before adding to list
   std::string users_serial = client_.get("users");
   Users users;
@@ -101,7 +102,10 @@ Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* re
 
   client_.put("following", following_serial);
   client_.put("followers", followers_serial);
-  
+ 
+  // Set monitor key to -1 to indicate monitoring is not occuring yet
+  client_.put("monitor::" + request->username(), "-1");
+  mtx_.unlock();
   return Status::OK;
 }
 
@@ -111,6 +115,7 @@ Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
   // TODO: check if text is empty - necessary?
 
   // check that user exists in database
+   mtx_.lock();
   bool valid_user = false;
   std::string users_serial = client_.get("users");
   Users users;
@@ -178,6 +183,29 @@ Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
 
   replies.SerializeToString(&replies_serial);
   client_.put("replies", replies_serial);
+
+  // broadcast chirp to followers
+  std::string followers_serial = client_.get("followers");
+  Followers followers;
+  followers.ParseFromString(followers_serial);
+
+  for(int i = 0; i < followers.followers_size(); i++) {
+    if((followers.followers(i)).username() == request->username()) {
+      for(int j = 0; j < followers.followers(i).follows_size(); j++) {
+	std::string follower_name = "monitor::" +  followers.followers(i).follows(j);
+	std::string monitor_serial = client_.get(follower_name);
+	if(monitor_serial != "-1") {
+	  Chirps chirps;
+          chirps.ParseFromString(monitor_serial);
+          Chirp* monitor_chirp = chirps.add_chirps();
+          *monitor_chirp = *chirp;
+          chirps.SerializeToString(&monitor_serial);
+          client_.put(follower_name, monitor_serial);
+	}
+      } 
+    }
+  }
+  mtx_.unlock();
   return Status::OK;
 }
 
@@ -187,6 +215,7 @@ Status SL_Server::follow(ServerContext* context, const FollowRequest* request,
   //TODO: don't let someone follow themselves
 
   // check that user and to_follow are valid users_
+  mtx_.lock();
   bool valid_user = false;
   bool valid_to_follow = false;
   std::string users_serial = client_.get("users");
@@ -234,17 +263,15 @@ Status SL_Server::follow(ServerContext* context, const FollowRequest* request,
 
   client_.put("following", following_serial);
   client_.put("followers", followers_serial);
-
+  mtx_.unlock();
   return Status::OK;
 }
 
 // allow user to read a thread
 Status SL_Server::read(ServerContext* context, const ReadRequest* request,
                 ReadReply* reply){
-  // TODO: get thread from backend service and return
-  // TODO: remove output chirps in service layer and store in reply
-
   //check if valid chirp id is provided
+  mtx_.lock();
   std::string chirps_serial = client_.get("chirps");
   Chirps chirps;
   chirps.ParseFromString(chirps_serial);
@@ -271,7 +298,7 @@ Status SL_Server::read(ServerContext* context, const ReadRequest* request,
     replies_vec.push_back(chirp_replies);
   }
   //implement DFS to display all read chirps
-  std::vector<bool> visited(chirps_.size(), false);
+  std::vector<bool> visited(chirps.chirps().size(), false);
   std::stack<int> dfs_stack;
   dfs_stack.push(std::stoi(request->chirp_id()));
   Chirp *chirp = reply->add_chirps();
@@ -295,12 +322,31 @@ Status SL_Server::read(ServerContext* context, const ReadRequest* request,
       dfs_stack.pop();
     }
   }
+  mtx_.unlock();
   return Status::OK;
 }
 
 // allow user to monitor followers
-Status SL_Server::monitor(ServerContext* context, const MonitorRequest* request,
-                MonitorReply* reply){
- //TODO: process user's following_ list and broadcast chirps_
+Status SL_Server::monitor(ServerContext* context, const MonitorRequest* request, ServerWriter<MonitorReply>* writer){
+  //TODO: process user's following_ list and broadcast chirps_
+  mtx_.lock();
+  std::string monitor_key = "monitor::" + request->username();
+  std::string monitor_serial = client_.get(monitor_key);
+  Chirps chirps;
+  chirps.ParseFromString(monitor_serial);
+  for(int i = 0; i < chirps.chirps_size(); i++) {
+    // add chirp to stream
+    MonitorReply monitor_reply;
+    Chirp* chirp = new Chirp();
+    *chirp = chirps.chirps(i);
+    monitor_reply.set_allocated_chirp(chirp);
+    writer->Write(monitor_reply);
+  }
+  // clear chirps in monitor before sending back to KVS
+  Chirps emptyChirps;
+  emptyChirps.SerializeToString(&monitor_serial);
+  client_.put(monitor_key, monitor_serial);
+  mtx_.unlock();
   return Status::OK;
+
 }

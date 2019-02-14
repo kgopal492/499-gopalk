@@ -11,6 +11,7 @@
 
 using grpc::Channel;
 using grpc::ClientContext;
+using grpc::ClientReader;
 using grpc::Status;
 
 using chirp::Chirp;

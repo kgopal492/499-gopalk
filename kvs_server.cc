@@ -20,6 +20,7 @@ using chirp::KeyValueStore;
 // and return whether insertion was successful
 Status KVS_Server::put(ServerContext* context, const PutRequest* request,
                 PutReply* reply){
+  mtx_.lock();
   // create iterator for `key_value_pairs` map
   std::map<std::string, std::string>::iterator key_it = key_value_pairs_.find(request->key());
   
@@ -30,6 +31,7 @@ Status KVS_Server::put(ServerContext* context, const PutRequest* request,
   else {
     key_value_pairs_.insert({request->key(), request->value()});
   }
+  mtx_.unlock();
   return Status::OK;
 }
 
@@ -37,7 +39,7 @@ Status KVS_Server::put(ServerContext* context, const PutRequest* request,
 // use `key` to return associated values
 // TODO: change from multiple requests and replies to just one
 Status KVS_Server::get(ServerContext* context, ServerReaderWriter<GetReply, GetRequest>* stream) {
-  
+  mtx_.lock();
   // Read all GetRequests from stream
   GetRequest request;
   while (stream->Read(&request)) {
@@ -50,10 +52,11 @@ Status KVS_Server::get(ServerContext* context, ServerReaderWriter<GetReply, GetR
       stream->Write(reply);
     }
     else {
+      mtx_.unlock();
       return Status(StatusCode::INVALID_ARGUMENT, "key: " + request.key() + " not in key value store");
     }
   }
-
+  mtx_.unlock();
   return Status::OK;
 }
 
@@ -61,11 +64,14 @@ Status KVS_Server::get(ServerContext* context, ServerReaderWriter<GetReply, GetR
 // delete key value pair associate with `key` parameter
 Status KVS_Server::deletekey(ServerContext* context, const DeleteRequest* request,
                 DeleteReply* reply){
+  mtx_.lock();
   std::map<std::string, std::string>::iterator key_it = key_value_pairs_.find(request->key());
   if(key_it != key_value_pairs_.end()) {
+    mtx_.unlock();
     return Status::OK;
   }
   else {
+    mtx_.unlock();
     return Status(StatusCode::INVALID_ARGUMENT, "key not in key value store");
   }
 }

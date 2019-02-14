@@ -58,7 +58,9 @@ int main(int argc, char *argv[]) {
     // monitor flag true, stream chirps
     if(FLAGS_monitor) {
       // TODO: handle failure
-      client.monitor(FLAGS_user);
+      while(1) {
+        client.monitor(FLAGS_user);
+      }
     }
   } else if(!FLAGS_chirp.empty() || !FLAGS_follow.empty() || FLAGS_monitor) {
     std::cout << "Cannot complete task without user logged in." << std::endl;

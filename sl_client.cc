@@ -105,10 +105,14 @@ const google::protobuf::RepeatedPtrField<chirp::Chirp> SL_Client::read(const std
 void SL_Client::monitor(const std::string& username) {
   MonitorRequest request;
   request.set_username(username);
-
   MonitorReply reply;
-
   ClientContext context;
-
-  stub_->monitor(&context, request);
+  std::unique_ptr<ClientReader<MonitorReply> > reader(stub_->monitor(&context, request));
+  while(reader->Read(&reply)) {
+    std::cout << reply.chirp().text() << std::endl;
+  }
+  Status status = reader->Finish();
+  if(!status.ok()) {
+    std::cout << "Monitor rpc failed" << std::endl; //TODO: change to log
+  } 
 }

@@ -1,5 +1,6 @@
 #include "KeyValueStore.grpc.pb.h"
 
+#include <mutex>
 #include <string>
 
 #include <grpcpp/grpcpp.h>
@@ -42,5 +43,6 @@ class KVS_Server final : public KeyValueStore::Service {
  private:
   // store of key value pairs in KVS_Server
   std::map<std::string, std::string> key_value_pairs_;
+  std::mutex mtx_;
 };
 #endif //CHIRP_KVS_Server_H
