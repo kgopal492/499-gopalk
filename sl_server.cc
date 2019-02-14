@@ -232,7 +232,7 @@ Status SL_Server::follow(ServerContext* context, const FollowRequest* request,
       break;
     }
   }
-  if(!valid_user) {
+  if(!valid_user || !valid_to_follow) {
     return Status(StatusCode::INVALID_ARGUMENT, "at least one username provided does not exist");
   }
 
@@ -329,11 +329,14 @@ Status SL_Server::read(ServerContext* context, const ReadRequest* request,
 // allow user to monitor followers
 Status SL_Server::monitor(ServerContext* context, const MonitorRequest* request, ServerWriter<MonitorReply>* writer){
   //TODO: process user's following_ list and broadcast chirps_
-  mtx_.lock();
   std::string monitor_key = "monitor::" + request->username();
+  while(!context->IsCancelled()) {
+  mtx_.lock();
   std::string monitor_serial = client_.get(monitor_key);
   Chirps chirps;
-  chirps.ParseFromString(monitor_serial);
+  if(monitor_serial != "-1") {
+    chirps.ParseFromString(monitor_serial);
+  }
   for(int i = 0; i < chirps.chirps_size(); i++) {
     // add chirp to stream
     MonitorReply monitor_reply;
@@ -347,6 +350,8 @@ Status SL_Server::monitor(ServerContext* context, const MonitorRequest* request,
   emptyChirps.SerializeToString(&monitor_serial);
   client_.put(monitor_key, monitor_serial);
   mtx_.unlock();
+  }
+  client_.put(monitor_key, "-1");
   return Status::OK;
 
 }
