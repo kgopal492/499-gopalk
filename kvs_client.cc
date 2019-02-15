@@ -54,9 +54,6 @@ std::string KVS_Client::get(const std::string& key) {
     return getReply.value();
   }
   Status status = stream->Finish();
-  if (!status.ok()) {
-    std::cout << "Get request failed." << std::endl;
-  }
   return "";
 }
 
