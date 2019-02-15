@@ -23,6 +23,9 @@ DEFINE_string(read, "", "Reads the chirp thread starting at the given id");
 DEFINE_bool(monitor, false, "Streams new tweets from those currently followed");
 
 int main(int argc, char *argv[]) {
+  // initialize glog
+  google::InitGoogleLogging(argv[0]);
+  
   // parse flags from command line
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 

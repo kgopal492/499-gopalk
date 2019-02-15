@@ -40,6 +40,9 @@ void run() {
 }
 
 int main(int argc, char** argv) {
+  // initialize glog
+  google::InitGoogleLogging(argv[0]);
+
   run();
   return 0;
 }

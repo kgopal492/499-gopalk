@@ -47,13 +47,16 @@ void run() {
 
   // assemble server
   std::unique_ptr<Server> server(builder.BuildAndStart());
-  std::cout << "Server listening on " << server_address << std::endl;
+  LOG(INFO) << "Server listening on " << server_address << std::endl;
 
   // Keep running until shutdown signal received
   server->Wait();
 }
 
 int main(int argc, char** argv) {
+  // initialize glog
+  google::InitGoogleLogging(argv[0]);
+
   run();
   return 0;
 }
