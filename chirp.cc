@@ -44,8 +44,8 @@ int main(int argc, char *argv[]) {
     // chirp flag provided, make chirp
     if(!FLAGS_chirp.empty()) {
       client.chirp(FLAGS_user, FLAGS_chirp, FLAGS_reply);
-    } else if (!FLAGS_reply.empty()) {
-      std::cout << "Cannot create without chirp specified." << std::endl;
+    } else if (FLAGS_reply.empty() != "-1") {
+      std::cout << "Cannot create reply without chirp specified." << std::endl;
     }
 
     // follow flag provided, follow given user
