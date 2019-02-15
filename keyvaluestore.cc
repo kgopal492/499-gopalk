@@ -1,6 +1,7 @@
 #include "kvs_server.h"
 #include "KeyValueStore.grpc.pb.h"
 
+#include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
 
 using grpc::Server;
