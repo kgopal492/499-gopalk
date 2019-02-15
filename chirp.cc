@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
 
     // display parent chirp initially
     if(chirps.size() > 0) {
-      std::cout << chirps[0].text() << std::endl;
+      std::cout << "\"" << chirps[0].text() << "\"" << "–" << chirps[0].parent_id() << "ID: " << chirps[0].chirp_id() << std::endl;
       parent_id.push(chirps[0].id());
     }
 
@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
       for(int j = 0; j < tabs; j++) {
         std::cout << "|   ";
       }
-      std::cout << chirps[i].text() << std::endl;
+      std::cout << "\"" << chirps[i].text() << "\"" << "–" << chirps[i].parent_id() << "ID: " << chirps[i].chirp_id() << std::endl;
       parent_id.push(chirps[i].id());
       tabs++;
     }

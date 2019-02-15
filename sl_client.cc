@@ -122,7 +122,7 @@ void SL_Client::monitor(const std::string& username) {
   // create `reader` to read stream of data from server
   std::unique_ptr<ClientReader<MonitorReply> > reader(stub_->monitor(&context, request));
   while(reader->Read(&reply)) {
-    std::cout << reply.chirp().text() << std::endl;
+    std::cout << "\"" << reply.chirp().text() << "\"" << "–" << reply.chirp().parent_id() << "ID: " << reply.chirp().chirp_id() << std::endl;
   }
   Status status = reader->Finish();
   if(!status.ok()) {
