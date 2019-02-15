@@ -6,10 +6,13 @@
 #include "ServiceLayer.pb.h"
 #include "kvs_client.h"
 
+#include <stack>
+#include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
+#include <google/protobuf/util/time_util.h>
 #include <grpcpp/grpcpp.h>
 
 using grpc::Channel;
@@ -21,6 +24,7 @@ using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::ServerWriter;
 using grpc::Status;
+using grpc::StatusCode;
 
 using chirp::Chirp;
 using chirp::RegisterRequest;
@@ -42,6 +46,7 @@ using chirp::Reply;
 using chirp::Follow;
 using chirp::Following;
 using chirp::Followers;
+
 #ifndef CHIRP_SL_SERVER_H
 #define CHIRP_SL_SERVER_H
 
@@ -66,7 +71,7 @@ class SL_Server final : public ServiceLayer::Service {
   // allow user to monitor followers
   Status monitor(ServerContext* context, const MonitorRequest* request,
                   ServerWriter<MonitorReply>* writer) override;
- //TODO: serialize and move data to Key Value Store
+
  private:
   // client for keyvaluestore layer
   KVS_Client client_;
@@ -74,4 +79,4 @@ class SL_Server final : public ServiceLayer::Service {
   std::mutex mtx_;
 };
 
-#endif
+#endif // CHIRP_SL_SERVER_H

@@ -1,31 +1,5 @@
 #include "sl_server.h"
 
-#include <stack>
-#include <stdexcept>
-#include <vector>
-
-#include <google/protobuf/util/time_util.h>
-
-using grpc::Server;
-using grpc::ServerBuilder;
-using grpc::ServerContext;
-using grpc::ServerWriter;
-using grpc::Status;
-using grpc::StatusCode;
-
-using chirp::Chirp;
-using chirp::RegisterRequest;
-using chirp::RegisterReply;
-using chirp::ChirpRequest;
-using chirp::ChirpReply;
-using chirp::FollowRequest;
-using chirp::FollowReply;
-using chirp::ReadRequest;
-using chirp::ReadReply;
-using chirp::MonitorRequest;
-using chirp::MonitorReply;
-
-// construct SL_Server with KVS_Client and initialize KVS
 SL_Server::SL_Server() : client_(grpc::CreateChannel("localhost:50000", grpc::InsecureChannelCredentials())) {
   // create empty Users object to store list of users
   Users users;
@@ -51,6 +25,7 @@ SL_Server::SL_Server() : client_(grpc::CreateChannel("localhost:50000", grpc::In
   Followers followers;
   std::string followers_serial;
   followers.SerializeToString(&followers_serial);
+
   // store empty data structures in key value store
   client_.put("users", users_serial);
   client_.put("chirps", chirps_serial);
@@ -59,8 +34,6 @@ SL_Server::SL_Server() : client_(grpc::CreateChannel("localhost:50000", grpc::In
   client_.put("followers", followers_serial);
 }
 
-
-// register user with backend service
 Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* request,
                 RegisterReply* reply){
    mtx_.lock();
@@ -70,6 +43,7 @@ Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* re
   users.ParseFromString(users_serial);
   for(int i = 0; i < users.username_size(); i++) {
     if(users.username(i) == request->username()) {
+      mtx_.unlock();
       return Status(StatusCode::ALREADY_EXISTS, "username has already been taken");
     }
   }
@@ -100,22 +74,22 @@ Status SL_Server::registeruser(ServerContext* context, const RegisterRequest* re
   following.SerializeToString(&following_serial);
   followers.SerializeToString(&followers_serial);
 
+  // put lists of followers and following back in database
   client_.put("following", following_serial);
   client_.put("followers", followers_serial);
- 
+
   // Set monitor key to -1 to indicate monitoring is not occuring yet
   client_.put("monitor::" + request->username(), "-1");
   mtx_.unlock();
+
   return Status::OK;
 }
 
-// allow user to send chirp and register with backend
 Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
                 ChirpReply* reply){
-  // TODO: check if text is empty - necessary?
+  mtx_.lock();
 
   // check that user exists in database
-   mtx_.lock();
   bool valid_user = false;
   std::string users_serial = client_.get("users");
   Users users;
@@ -127,6 +101,7 @@ Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
     }
   }
   if(!valid_user) {
+    mtx_.unlock();
     return Status(StatusCode::INVALID_ARGUMENT, "user does not exist");
   }
 
@@ -134,18 +109,21 @@ Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
   std::string chirps_serial = client_.get("chirps");
   Chirps chirps;
   chirps.ParseFromString(chirps_serial);
+
   // check that parent_id exists in database
   try {
     if( (request->parent_id() != "-1") && ((std::stoi(request->parent_id()) >= chirps.chirps_size()) || (std::stoi(request->parent_id()) < 0)) ) {
+      mtx_.unlock();
       return Status(StatusCode::INVALID_ARGUMENT, "parent_id not valid");
     }
   } catch (std::invalid_argument&) {
+    mtx_.unlock();
     return Status(StatusCode::INVALID_ARGUMENT, "parent_id not valid");
   }
 
   // create new chirp
-  Chirp *chirp = new Chirp(); 
-  
+  Chirp *chirp = new Chirp();
+
   // create timestamp for chirp
   int64_t seconds = google::protobuf::util::TimeUtil::TimestampToSeconds(google::protobuf::util::TimeUtil::GetCurrentTime());
   int64_t useconds = google::protobuf::util::TimeUtil::TimestampToMicroseconds(google::protobuf::util::TimeUtil::GetCurrentTime());
@@ -160,10 +138,11 @@ Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
   chirp->set_id(std::to_string(chirps.chirps_size()));
   chirp->set_parent_id(request->parent_id());
   reply->set_allocated_chirp(chirp);
-  
+
+  // add new chirp to chirps repeated variable
   Chirp *newChirp = chirps.add_chirps();
-  *newChirp = *chirp; 
-  
+  *newChirp = *chirp;
+
   // add chirp to KVS
   chirps.SerializeToString(&chirps_serial);
   client_.put("chirps", chirps_serial);
@@ -178,7 +157,8 @@ Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
 
   // add reply to original chirp id if reply flag specified
   if((request->parent_id() != "-1")) {
-    replies.mutable_allreplies(std::stoi(request->parent_id()))->add_replies(std::stoi(chirp->id())); 
+    replies.mutable_allreplies(std::stoi(request->parent_id()))
+        ->add_replies(std::stoi(chirp->id()));
   }
 
   replies.SerializeToString(&replies_serial);
@@ -189,33 +169,36 @@ Status SL_Server::chirp(ServerContext* context, const ChirpRequest* request,
   Followers followers;
   followers.ParseFromString(followers_serial);
 
+  // loop through each follower
   for(int i = 0; i < followers.followers_size(); i++) {
     if((followers.followers(i)).username() == request->username()) {
       for(int j = 0; j < followers.followers(i).follows_size(); j++) {
-	std::string follower_name = "monitor::" +  followers.followers(i).follows(j);
-	std::string monitor_serial = client_.get(follower_name);
-	if(monitor_serial != "-1") {
-	  Chirps chirps;
+        std::string follower_name =
+            "monitor::" + followers.followers(i).follows(j);
+        std::string monitor_serial = client_.get(follower_name);
+
+        // if monitoring is true, add chirp to broadcast list for user
+        if (monitor_serial != "-1") {
+          Chirps chirps;
           chirps.ParseFromString(monitor_serial);
           Chirp* monitor_chirp = chirps.add_chirps();
           *monitor_chirp = *chirp;
           chirps.SerializeToString(&monitor_serial);
           client_.put(follower_name, monitor_serial);
-	}
-      } 
+        }
+      }
     }
   }
   mtx_.unlock();
   return Status::OK;
 }
 
-// allow user to follow another user (store in backend)
 Status SL_Server::follow(ServerContext* context, const FollowRequest* request,
                 FollowReply* reply){
-  //TODO: don't let someone follow themselves
-
   // check that user and to_follow are valid users_
   mtx_.lock();
+
+  // check that request->user() and request->to_follow() are valid
   bool valid_user = false;
   bool valid_to_follow = false;
   std::string users_serial = client_.get("users");
@@ -233,6 +216,7 @@ Status SL_Server::follow(ServerContext* context, const FollowRequest* request,
     }
   }
   if(!valid_user || !valid_to_follow) {
+    mtx_.unlock();
     return Status(StatusCode::INVALID_ARGUMENT, "at least one username provided does not exist");
   }
 
@@ -258,6 +242,7 @@ Status SL_Server::follow(ServerContext* context, const FollowRequest* request,
     }
   }
 
+  // put new lists in database
   following.SerializeToString(&following_serial);
   followers.SerializeToString(&followers_serial);
 
@@ -267,19 +252,21 @@ Status SL_Server::follow(ServerContext* context, const FollowRequest* request,
   return Status::OK;
 }
 
-// allow user to read a thread
 Status SL_Server::read(ServerContext* context, const ReadRequest* request,
                 ReadReply* reply){
-  //check if valid chirp id is provided
   mtx_.lock();
+
+  // check if valid chirp id is provided
   std::string chirps_serial = client_.get("chirps");
   Chirps chirps;
   chirps.ParseFromString(chirps_serial);
   try {
     if((std::stoi(request->chirp_id()) < 0) || (std::stoi(request->chirp_id()) >= chirps.chirps_size())) {
+      mtx_.unlock();
       return Status(StatusCode::INVALID_ARGUMENT, "invalid chirp id");
     }
   } catch (std::invalid_argument&) {
+    mtx_.unlock();
     return Status(StatusCode::INVALID_ARGUMENT, "invalid chirp id");
   }
 
@@ -310,46 +297,46 @@ Status SL_Server::read(ServerContext* context, const ReadRequest* request,
     for(int i = 0; i < replies_vec[curr_id].size(); i++){
       int reply_id = replies_vec[curr_id][i];
       if(!visited[reply_id]) {
-	Chirp *chirpReply = reply->add_chirps();
-        *chirpReply = chirps.chirps(reply_id); 
-      	visited[reply_id] = true;
-      	dfs_stack.push(reply_id);
+        Chirp *chirpReply = reply->add_chirps();
+        *chirpReply = chirps.chirps(reply_id);
+        visited[reply_id] = true;
+        dfs_stack.push(reply_id);
         child_exists = true;
-	break;
+        break;
       }
     }
     if(!child_exists) {
       dfs_stack.pop();
     }
   }
+
   mtx_.unlock();
   return Status::OK;
 }
 
-// allow user to monitor followers
 Status SL_Server::monitor(ServerContext* context, const MonitorRequest* request, ServerWriter<MonitorReply>* writer){
-  //TODO: process user's following_ list and broadcast chirps_
+  // find list of chirps to stream from
   std::string monitor_key = "monitor::" + request->username();
   while(!context->IsCancelled()) {
-  mtx_.lock();
-  std::string monitor_serial = client_.get(monitor_key);
-  Chirps chirps;
-  if(monitor_serial != "-1") {
-    chirps.ParseFromString(monitor_serial);
-  }
-  for(int i = 0; i < chirps.chirps_size(); i++) {
-    // add chirp to stream
-    MonitorReply monitor_reply;
-    Chirp* chirp = new Chirp();
-    *chirp = chirps.chirps(i);
-    monitor_reply.set_allocated_chirp(chirp);
-    writer->Write(monitor_reply);
-  }
-  // clear chirps in monitor before sending back to KVS
-  Chirps emptyChirps;
-  emptyChirps.SerializeToString(&monitor_serial);
-  client_.put(monitor_key, monitor_serial);
-  mtx_.unlock();
+    mtx_.lock();
+    std::string monitor_serial = client_.get(monitor_key);
+    Chirps chirps;
+    if (monitor_serial != "-1") {
+      chirps.ParseFromString(monitor_serial);
+    }
+    for (int i = 0; i < chirps.chirps_size(); i++) {
+      // add each chirp to stream
+      MonitorReply monitor_reply;
+      Chirp *chirp = new Chirp();
+      *chirp = chirps.chirps(i);
+      monitor_reply.set_allocated_chirp(chirp);
+      writer->Write(monitor_reply);
+    }
+    // clear chirps in monitor before sending back to KVS
+    Chirps emptyChirps;
+    emptyChirps.SerializeToString(&monitor_serial);
+    client_.put(monitor_key, monitor_serial);
+    mtx_.unlock();
   }
   client_.put(monitor_key, "-1");
   return Status::OK;

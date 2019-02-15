@@ -12,6 +12,7 @@ using grpc::ServerReader;
 using grpc::ServerReaderWriter;
 using grpc::ServerWriter;
 using grpc::Status;
+using grpc::StatusCode;
 
 using chirp::PutRequest;
 using chirp::PutReply;
@@ -29,20 +30,22 @@ using chirp::KeyValueStore;
  // a key-value-store
 class KVS_Server final : public KeyValueStore::Service {
  public:
-  // put key and value pair in key-value store
-  Status put(ServerContext* context, const PutRequest* request,
-                  PutReply* reply) override;
+   // put key and value pair in `key_value_pairs_` data structure
+   Status put(ServerContext *context, const PutRequest *request,
+              PutReply *reply) override;
 
-  // get value based upon key string
-  Status get(ServerContext* context, ServerReaderWriter<GetReply, GetRequest>* stream) override;
+   // get value based upon key string from `key_value_pairs_` member variable
+   Status get(ServerContext *context,
+              ServerReaderWriter<GetReply, GetRequest> *stream) override;
 
-  // delete key-value pair given key
-  Status deletekey(ServerContext* context, const DeleteRequest* request,
-                  DeleteReply* reply) override;
+   // delete key-value pair given key from `key_value_pairs_` variable
+   Status deletekey(ServerContext *context, const DeleteRequest *request,
+                    DeleteReply *reply) override;
 
  private:
   // store of key value pairs in KVS_Server
   std::map<std::string, std::string> key_value_pairs_;
+  // use mutex to lock functions while key_value_pairs_ is being modified
   std::mutex mtx_;
 };
-#endif //CHIRP_KVS_Server_H
+#endif // CHIRP_KVS_SERVER_H

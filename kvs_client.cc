@@ -30,15 +30,12 @@ bool KVS_Client::put(const std::string &key, const std::string &value) {
   }
 }
 
-// use `key` to return associated values
-// TODO: change from stream to single request and reply
 std::string KVS_Client::get(const std::string& key) {
   ClientContext context;
-  
   // create stream object to write and read keys and values from
   std::shared_ptr<ClientReaderWriter<GetRequest, GetReply> > stream(
       stub_->get(&context));
-  
+
   // create GetRequest for given `key` and pass to kvs_server
   GetRequest getRequest;
   getRequest.set_key(key);
@@ -50,6 +47,9 @@ std::string KVS_Client::get(const std::string& key) {
 
   // read GetReplies from server
   GetReply getReply;
+
+  // return first GetReply object since
+  // this implementation assumes only one reply
   while (stream->Read(&getReply)) {
     return getReply.value();
   }
@@ -60,15 +60,17 @@ std::string KVS_Client::get(const std::string& key) {
   return "";
 }
 
-// delete key value pair associate with `key` parameter
 bool KVS_Client::deletekey(const std::string& key) {
+  // create request object
   DeleteRequest request;
   request.set_key(key);
 
+  // create object to hold reply
   DeleteReply reply;
 
   ClientContext context;
 
+  // send to server
   Status status = stub_->deletekey(&context, request, &reply);
 
   if (status.ok()) {
