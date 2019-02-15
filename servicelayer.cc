@@ -47,7 +47,7 @@ void run() {
 
   // assemble server
   std::unique_ptr<Server> server(builder.BuildAndStart());
-  LOG(INFO) << "Server listening on " << server_address << std::endl;
+  std::cout << "Server listening on " << server_address << std::endl;
 
   // Keep running until shutdown signal received
   server->Wait();
