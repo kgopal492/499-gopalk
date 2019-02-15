@@ -236,9 +236,18 @@ Status SL_Server::follow(ServerContext* context, const FollowRequest* request,
     }
   }
 
+  // add follower if follower hasn't been added before
+  bool add_follow = true;
   for(int i = 0; i < followers.followers_size(); i++) {
     if((followers.followers(i)).username() == request->to_follow()) {
-      (followers.mutable_followers(i))->add_follows(request->username());
+      for (int j = 0; j < followers.followers(i).follows_size(); j++) {
+        if (followers.followers(i).follows(j) == request->username()) {
+          add_follow = false;
+        }
+      }
+      if (add_follow) {
+        (followers.mutable_followers(i))->add_follows(request->username());
+      }
     }
   }
 

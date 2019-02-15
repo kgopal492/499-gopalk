@@ -73,7 +73,3 @@ Compile with `make` command in root directory: 499-gopalk/
 ./chirp --monitor=true --user "krishna"
 ```
 4. If monitor flag is run in one shell, spawn another shell to continue to execute chirp commands.
-
-## Run Tests
-
-Run `./tests` to see results of gtests

@@ -25,9 +25,9 @@ using chirp::KeyValueStore;
 #ifndef CHIRP_KVS_SERVER_H
 #define CHIRP_KVS_SERVER_H
 
- // KVS_Server class supports 3 API calls
- // get(), put(), and delete(), and contains
- // a key-value-store
+// KVS_Server class supports 3 API calls
+// get(), put(), and delete(), and contains
+// a key-value-store
 class KVS_Server final : public KeyValueStore::Service {
  public:
    // put key and value pair in `key_value_pairs_` data structure
