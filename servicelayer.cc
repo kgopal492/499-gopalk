@@ -3,6 +3,7 @@
 #include "ServiceLayer.grpc.pb.h"
 #include "sl_server.h"
 
+#include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
 
