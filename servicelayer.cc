@@ -3,8 +3,6 @@
 #include "ServiceLayer.grpc.pb.h"
 #include "sl_server.h"
 
-#include <gflags/gflags.h>
-#include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
 
 using grpc::Server;
@@ -56,9 +54,6 @@ void run() {
 }
 
 int main(int argc, char** argv) {
-  // initialize glog
-  google::InitGoogleLogging(argv[0]);
-
   run();
   return 0;
 }

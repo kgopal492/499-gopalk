@@ -41,4 +41,4 @@ chirp: ServiceLayer.pb.o ServiceLayer.grpc.pb.o sl_client.o chirp.o
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
 
 clean:
-	rm -f *.o *.pb.cc *.pb.h keyvaluestore servicelayer chirp tests
+	rm -f *.o *.pb.cc *.pb.h keyvaluestore servicelayer chirp
