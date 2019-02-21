@@ -1,0 +1,6 @@
+*.pb.h
+*.o
+chirp
+servicelayer
+keyvaluestore
+tests
