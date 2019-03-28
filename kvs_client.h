@@ -5,6 +5,8 @@
 
 #include <grpcpp/grpcpp.h>
 
+#include "kvs_client_interface.h"
+
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::ClientReaderWriter;
@@ -21,9 +23,9 @@ using chirp::KeyValueStore;
 #ifndef CHIRP_KVS_CLIENT_H
 #define CHIRP_KVS_CLIENT_H
 
-// provides an interface for the service layer to
-// submit requests to the key-value store
-class KVS_Client {
+// allows service layer to submit requests to
+// the key-value store server over gRPC
+class KVS_Client : public KVS_Client_Interface {
  public:
    // construct client with channel to KVS_Server class
    KVS_Client(std::shared_ptr<Channel> channel);

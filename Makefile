@@ -13,7 +13,7 @@ LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++`\
            -ldl\
            -lgflags\
            -lgtest\
-	   -lglog
+           -lglog
 endif
 PROTOC = protoc
 GRPC_CPP_PLUGIN = grpc_cpp_plugin
@@ -23,15 +23,18 @@ PROTOS_PATH = ./protos
 
 vpath %.proto $(PROTOS_PATH)
 
-all: keyvaluestore servicelayer chirp
+all: keyvaluestore servicelayer chirp test
 
-keyvaluestore: KeyValueStore.pb.o KeyValueStore.grpc.pb.o kvs_server.o keyvaluestore.o
+keyvaluestore: KeyValueStore.pb.o KeyValueStore.grpc.pb.o kvs_server.o kvs_backend.o keyvaluestore.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-servicelayer: KeyValueStore.pb.o KeyValueStore.grpc.pb.o ServiceLayer.pb.o ServiceLayer.grpc.pb.o Backend.pb.o Backend.grpc.pb.o sl_server.o kvs_client.o servicelayer.o
+servicelayer: KeyValueStore.pb.o KeyValueStore.grpc.pb.o ServiceLayer.pb.o ServiceLayer.grpc.pb.o Backend.pb.o Backend.grpc.pb.o sl_server.o sl_functionality.o kvs_client.o kvs_backend.o kvs_client_test.o servicelayer.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 chirp: ServiceLayer.pb.o ServiceLayer.grpc.pb.o sl_client.o chirp.o
+	$(CXX) $^ $(LDFLAGS) -o $@
+
+test: test.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 %.grpc.pb.cc: %.proto
@@ -41,4 +44,4 @@ chirp: ServiceLayer.pb.o ServiceLayer.grpc.pb.o sl_client.o chirp.o
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
 
 clean:
-	rm -f *.o *.pb.cc *.pb.h keyvaluestore servicelayer chirp
+	rm -f *.o *.pb.cc *.pb.h keyvaluestore servicelayer chirp test

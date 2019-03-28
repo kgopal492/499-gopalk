@@ -4,3 +4,5 @@ chirp
 servicelayer
 keyvaluestore
 tests
+test.cc
+unittest.cc

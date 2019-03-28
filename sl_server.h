@@ -5,7 +5,7 @@
 #include "ServiceLayer.grpc.pb.h"
 #include "ServiceLayer.pb.h"
 #include "kvs_client.h"
-
+#include "sl_functionality.h"
 #include <stack>
 #include <stdexcept>
 #include <unordered_map>
@@ -39,12 +39,8 @@ using chirp::MonitorRequest;
 using chirp::MonitorReply;
 using chirp::ServiceLayer;
 
-using chirp::Users;
 using chirp::Chirps;
 using chirp::Replies;
-using chirp::Reply;
-using chirp::Follow;
-using chirp::Following;
 using chirp::Followers;
 
 #ifndef CHIRP_SL_SERVER_H
@@ -73,10 +69,9 @@ class SL_Server final : public ServiceLayer::Service {
                   ServerWriter<MonitorReply>* writer) override;
 
  private:
-  // client for keyvaluestore layer
-  KVS_Client client_;
-  // mutex to lock sl for monitor and other functions
-  std::mutex mtx_;
+  // SL_Functionality object is used to perform user commands
+  // accessing the backend
+  SL_Functionality sl_func_;
 };
 
 #endif // CHIRP_SL_SERVER_H

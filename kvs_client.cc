@@ -3,8 +3,6 @@
 KVS_Client::KVS_Client(std::shared_ptr<Channel> channel)
     : stub_(KeyValueStore::NewStub(channel)) {}
 
-// take `key` and `value` to insert into key-value table
-// and return whether insertion was successful
 bool KVS_Client::put(const std::string &key, const std::string &value) {
   // Send key and value to key-value store
   PutRequest request;

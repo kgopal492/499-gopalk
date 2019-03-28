@@ -4,40 +4,18 @@ import "ServiceLayer.proto";
 
 package chirp;
 
-// message to store all usernames (for register)
-message Users {
-  repeated string username = 1;
-}
-
-// stores all chirps made
+// stores chirps for monitor request
 message Chirps {
   repeated Chirp chirps = 1;
 }
 
 // structure to associate chirp with replies
-message Reply {
-  int64 id = 1;
-  repeated int64 replies = 2;
-}
-
-// structure to hold all replies for each chirp id
 message Replies {
-  repeated Reply allReplies = 1;
+  repeated string id = 2;
 }
 
 // structure to associate username with other users
 // to store following and follower data
-message Follow {
-  string username = 1;
-  repeated string follows = 2;
-}
-
-// stores entire map of users to who they're following
-message Following {
-  repeated Follow following = 1;
-}
-
-// stores entire map of users to their followers
 message Followers {
-  repeated Follow followers = 1;
+  repeated string username = 1;
 }
