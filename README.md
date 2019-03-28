@@ -60,8 +60,8 @@ git checkout phase1
 Compile with `make` command in root directory: 499-gopalk/
 
 ## Run Chirp
-1. Run executable keyvaluestore in one terminal shell: `./keyvaluestore`
-2. Run executable servicelayer in *another* terminal shell: `./servicelayer`
+1. Run executable key_value_layer in one terminal shell: `./key_value_layer`
+2. Run executable service_layer in *another* terminal shell: `./service_layer`
 3. Run any chirp commands in other terminal(s), e.g.:
 
 ```

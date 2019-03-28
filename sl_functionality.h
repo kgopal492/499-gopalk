@@ -50,14 +50,14 @@ using chirp::Followers;
 
 // implementation of service layer
 // takes request from command line clients
-class SL_Functionality{
+class ServiceLayerFunctionality{
  public:
-  // constructor, initializes KVS_Client
-  SL_Functionality(const bool &testing);
+  // constructor, initializes KeyValueClient
+  ServiceLayerFunctionality(const bool &testing);
   // register user with backend service
   bool registeruser(const std::string &username);
   // allow user to send chirp and register with backend
-  Chirp* chirp(const std::string& username, const std::string& text, const std::string& parent_id);
+  Chirp* chirp(Chirp* chirp, const std::string& username, const std::string& text, const std::string& parent_id);
   // allow user to follow another user (store in backend)
   int follow(const std::string& username, const std::string& to_follow);
   // return a vector of Chirps to read a thread of a chirp and its replies
@@ -71,10 +71,9 @@ class SL_Functionality{
   bool user_exists(const std::string& username);
   // check if parent_id is valid
   bool valid_parent_id(const std::string& parent_id);
-
  private:
   // create chirp to be inserted into key value store
-  Chirp* create_chirp(const std::string& username, const std::string& text, const std::string& parent_id, const std::string& chirp_id);
+  void create_chirp(Chirp* chirp, const std::string& username, const std::string& text, const std::string& parent_id, const std::string& chirp_id);
   // add reply to parent chirp
   void add_reply(const std::string& chirp_id, const std::string& parent_id);
   // return current total count of chirps
@@ -86,7 +85,7 @@ class SL_Functionality{
   // broadcast a chirp to all followers of the user who are monitoring
   void broadcast_chirp(const std::string& username, Chirp chirp);
   // client for keyvaluestore layer
-  KVS_Client_Interface* client_;
+  KeyValueClientInterface* client_;
   // mutex to lock sl for monitor and other functions
   std::mutex sl_func_mtx_;
 };

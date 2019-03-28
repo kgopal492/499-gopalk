@@ -1,11 +1,3 @@
-#include "Backend.grpc.pb.h"
-#include "Backend.pb.h"
-#include "KeyValueStore.grpc.pb.h"
-#include "KeyValueStore.pb.h"
-#include "ServiceLayer.grpc.pb.h"
-#include "ServiceLayer.pb.h"
-#include "kvs_client.h"
-#include "sl_functionality.h"
 #include <stack>
 #include <stdexcept>
 #include <unordered_map>
@@ -14,6 +6,15 @@
 
 #include <google/protobuf/util/time_util.h>
 #include <grpcpp/grpcpp.h>
+
+#include "Backend.grpc.pb.h"
+#include "Backend.pb.h"
+#include "KeyValueStore.grpc.pb.h"
+#include "KeyValueStore.pb.h"
+#include "ServiceLayer.grpc.pb.h"
+#include "ServiceLayer.pb.h"
+#include "kvs_client.h"
+#include "sl_functionality.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -48,10 +49,10 @@ using chirp::Followers;
 
 // implementation of service layer
 // takes request from command line clients
-class SL_Server final : public ServiceLayer::Service {
+class ServiceLayerServer final : public ServiceLayer::Service {
  public:
-  // constructor, initializes KVS_Client
-  SL_Server();
+  // constructor, initializes KeyValueClient
+  ServiceLayerServer();
   // register user with backend service
   Status registeruser(ServerContext* context, const RegisterRequest* request,
                   RegisterReply* reply) override;
@@ -67,11 +68,10 @@ class SL_Server final : public ServiceLayer::Service {
   // allow user to monitor followers
   Status monitor(ServerContext* context, const MonitorRequest* request,
                   ServerWriter<MonitorReply>* writer) override;
-
  private:
-  // SL_Functionality object is used to perform user commands
+  // ServiceLayerFunctionality object is used to perform user commands
   // accessing the backend
-  SL_Functionality sl_func_;
+  ServiceLayerFunctionality sl_func_;
 };
 
 #endif // CHIRP_SL_SERVER_H

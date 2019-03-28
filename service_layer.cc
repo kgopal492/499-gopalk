@@ -1,9 +1,9 @@
+#include <grpcpp/grpcpp.h>
+
 #include "kvs_client.h"
 #include "KeyValueStore.grpc.pb.h"
 #include "ServiceLayer.grpc.pb.h"
 #include "sl_server.h"
-
-#include <grpcpp/grpcpp.h>
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -36,7 +36,7 @@ using chirp::KeyValueStore;
 void run() {
   // run server on localhost:50002
   std::string server_address("0.0.0.0:50002");
-  SL_Server service;
+  ServiceLayerServer service;
   ServerBuilder builder;
 
   // listen on server address

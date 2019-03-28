@@ -6,7 +6,7 @@
 // provides an interface for KVS_Client and KVS_Client_Test
 // classes to inherit from (to differentiate between key value
 // store clients used in testing and production)
-class KVS_Client_Interface {
+class KeyValueClientInterface {
  public:
    // take `key` and `value` to insert into key-value table
    // and return whether insertion was successful

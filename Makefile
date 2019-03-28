@@ -23,12 +23,12 @@ PROTOS_PATH = ./protos
 
 vpath %.proto $(PROTOS_PATH)
 
-all: keyvaluestore servicelayer chirp test
+all: key_value_layer service_layer chirp test
 
-keyvaluestore: KeyValueStore.pb.o KeyValueStore.grpc.pb.o kvs_server.o kvs_backend.o keyvaluestore.o
+key_value_layer: KeyValueStore.pb.o KeyValueStore.grpc.pb.o kvs_server.o kvs_backend.o key_value_layer.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-servicelayer: KeyValueStore.pb.o KeyValueStore.grpc.pb.o ServiceLayer.pb.o ServiceLayer.grpc.pb.o Backend.pb.o Backend.grpc.pb.o sl_server.o sl_functionality.o kvs_client.o kvs_backend.o kvs_client_test.o servicelayer.o
+service_layer: KeyValueStore.pb.o KeyValueStore.grpc.pb.o ServiceLayer.pb.o ServiceLayer.grpc.pb.o Backend.pb.o Backend.grpc.pb.o sl_server.o sl_functionality.o kvs_client.o kvs_backend.o kvs_client_test.o service_layer.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 chirp: ServiceLayer.pb.o ServiceLayer.grpc.pb.o sl_client.o chirp.o
@@ -44,4 +44,4 @@ test: test.o
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
 
 clean:
-	rm -f *.o *.pb.cc *.pb.h keyvaluestore servicelayer chirp test
+	rm -f *.o *.pb.cc *.pb.h key_value_layer service_layer chirp test

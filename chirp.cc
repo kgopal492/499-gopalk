@@ -27,11 +27,11 @@ int main(int argc, char *argv[]) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   // create connection with service layer
-  SL_Client client(grpc::CreateChannel("localhost:50002", grpc::InsecureChannelCredentials()));
+  ServiceLayerClient client(grpc::CreateChannel("localhost:50002", grpc::InsecureChannelCredentials()));
 
   // register flag provided, register username
-  if(!FLAGS_register.empty()) {
-    if(client.registeruser(FLAGS_register)) {
+  if (!FLAGS_register.empty()) {
+    if (client.registeruser(FLAGS_register)) {
       std::cout << "Successfully registered user " << FLAGS_register << std::endl;
     } else {
       std::cout << "Attempt to register user " << FLAGS_register << " failed." << std::endl;
@@ -39,18 +39,18 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  // check if username is provided before performing tasks
-  if(!FLAGS_user.empty()) {
+  // check if  username is provided before performing tasks
+  if (!FLAGS_user.empty()) {
     // chirp flag provided, make chirp
-    if(!FLAGS_chirp.empty()) {
+    if (!FLAGS_chirp.empty()) {
       client.chirp(FLAGS_user, FLAGS_chirp, FLAGS_reply);
     } else if (FLAGS_reply != "-1") {
       std::cout << "Cannot create reply without chirp specified." << std::endl;
     }
 
     // follow flag provided, follow given user
-    if(!FLAGS_follow.empty()) {
-      if(client.follow(FLAGS_user, FLAGS_follow)) {
+    if (!FLAGS_follow.empty()) {
+      if (client.follow(FLAGS_user, FLAGS_follow)) {
         std::cout << "User " << FLAGS_user << " successfully followed " << FLAGS_follow << "." << std::endl;
       } else {
         std::cout << "Attempt for " << FLAGS_user << " to follow " << FLAGS_follow << " failed." << std::endl;
@@ -59,15 +59,15 @@ int main(int argc, char *argv[]) {
     }
 
     // monitor flag true, stream chirps
-    if(FLAGS_monitor) {
+    if (FLAGS_monitor) {
       client.monitor(FLAGS_user);
     }
-  } else if(!FLAGS_chirp.empty() || !FLAGS_follow.empty() || FLAGS_monitor) {
+  } else if (!FLAGS_chirp.empty() || !FLAGS_follow.empty() || FLAGS_monitor) {
     std::cout << "Cannot complete task without user logged in." << std::endl;
   }
 
   // read flag provided, read chirp thread
-  if(!FLAGS_read.empty()) {
+  if (!FLAGS_read.empty()) {
     // store list of chirps in thread in `chirps`
     google::protobuf::RepeatedPtrField<chirp::Chirp> chirps = client.read(FLAGS_read);
 
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
     std::stack<std::string> parent_id;
 
     // display parent chirp initially
-    if(chirps.size() > 0) {
+    if (chirps.size() > 0) {
       std::cout << "\"" << chirps[0].text() << "\"" << " - " << chirps[0].username() << " ID: " << chirps[0].id() << std::endl;
       parent_id.push(chirps[0].id());
     }
@@ -95,6 +95,5 @@ int main(int argc, char *argv[]) {
       tabs++;
     }
   }
-
   return 0;
 }

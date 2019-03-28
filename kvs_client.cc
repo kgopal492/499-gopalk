@@ -1,9 +1,9 @@
 #include "kvs_client.h"
 
-KVS_Client::KVS_Client(std::shared_ptr<Channel> channel)
+KeyValueClient::KeyValueClient(std::shared_ptr<Channel> channel)
     : stub_(KeyValueStore::NewStub(channel)) {}
 
-bool KVS_Client::put(const std::string &key, const std::string &value) {
+bool KeyValueClient::put(const std::string &key, const std::string &value) {
   // Send key and value to key-value store
   PutRequest request;
   request.set_key(key);
@@ -28,7 +28,7 @@ bool KVS_Client::put(const std::string &key, const std::string &value) {
   }
 }
 
-std::string KVS_Client::get(const std::string& key) {
+std::string KeyValueClient::get(const std::string& key) {
   ClientContext context;
   // create stream object to write and read keys and values from
   std::shared_ptr<ClientReaderWriter<GetRequest, GetReply> > stream(
@@ -55,7 +55,7 @@ std::string KVS_Client::get(const std::string& key) {
   return "";
 }
 
-bool KVS_Client::deletekey(const std::string& key) {
+bool KeyValueClient::deletekey(const std::string& key) {
   // create request object
   DeleteRequest request;
   request.set_key(key);

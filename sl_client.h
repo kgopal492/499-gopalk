@@ -32,10 +32,10 @@ using chirp::ServiceLayer;
 
 // interface to send grpc request to the service layer
 // from the chirp client's command line
-class SL_Client {
+class ServiceLayerClient {
  public:
   // constructor - initializes channel
-  SL_Client(std::shared_ptr<Channel> channel);
+  ServiceLayerClient(std::shared_ptr<Channel> channel);
   // registers username of new user with key-value store
   // returns true if username is available
   bool registeruser(const std::string& username);
@@ -50,7 +50,6 @@ class SL_Client {
   const google::protobuf::RepeatedPtrField<chirp::Chirp> read(const std::string& chirp_id);
   // waits for service layer to send chirps of following users
   void monitor(const std::string& username);
-
  private:
    // `stub_` sends and receives data over gRPC
    std::unique_ptr<ServiceLayer::Stub> stub_;

@@ -1,8 +1,8 @@
 #include "kvs_backend.h"
 
-bool KVS_Backend::put(const std::string &key, const std::string &value) {
+bool KeyValueBackend::put(const std::string &key, const std::string &value) {
   // if key is an empty string, return false
-  if(key.empty() || value.empty()) {
+  if (key.empty() || value.empty()) {
     return false;
   }
   // lock the `key_value_pairs_` structure before inserting or updating pair
@@ -14,27 +14,27 @@ bool KVS_Backend::put(const std::string &key, const std::string &value) {
   return true;
 }
 
-std::string KVS_Backend::get(const std::string &key) {
+std::string KeyValueBackend::get(const std::string &key) {
   // lock the `key_value_pairs_` structure before getting value
   // (to ensure structure doesn't change if thread is preempted)
   std::lock_guard<std::mutex> lock(key_value_mtx_);
   // create an iterator to find key in unordered_map
   std::unordered_map<std::string, std::string>::iterator key_it = key_value_pairs_.find(key);
   // return key if it exists, else return empty string
-  if(key_it != key_value_pairs_.end()) {
+  if (key_it != key_value_pairs_.end()) {
     return key_value_pairs_[key];
   }
   return "";
 }
 
-bool KVS_Backend::deletekey(const std::string &key) {
+bool KeyValueBackend::deletekey(const std::string &key) {
   // lock the `key_value_pairs_` structure before deleting value
   // in case another thread attempts to preempt and access value
   std::lock_guard<std::mutex> lock(key_value_mtx_);
   // determine if key exists in database to return error
   std::unordered_map<std::string, std::string>::iterator key_it = key_value_pairs_.find(key);
   // return true if key sucessfully deleted from database
-  if(key_it != key_value_pairs_.end()) {
+  if (key_it != key_value_pairs_.end()) {
     key_value_pairs_.erase(key);
     return true;
   }
