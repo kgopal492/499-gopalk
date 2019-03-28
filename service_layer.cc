@@ -61,7 +61,6 @@ void run() {
 int main(int argc, char** argv) {
   // initialize glog
   google::InitGoogleLogging(argv[0]);
-  FLAGS_logtostderr = 1;
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   // run service layer server to receive requests from command line
