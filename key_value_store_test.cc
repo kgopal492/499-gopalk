@@ -103,13 +103,6 @@ TEST(KeyValueBackendTest, PutGetDelete) {
   EXPECT_EQ(backend.deletekey("12"), false);
 }
 
-// put, get, Delete, get, insert, get should return value
-
-// put value of one key, overwrite with another value, get should return new value
-
-// put, delete, delete (can't delete same key twice)
-
-// test all KeyValueBackend functionalities
 int main(int argc, char* argv[]) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
