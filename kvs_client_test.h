@@ -1,15 +1,15 @@
-// TODO: CONSIDER delete class
+#ifndef CHIRP_KVS_CLIENT_TEST_H
+#define CHIRP_KVS_CLIENT_TEST_H
+
 #include <string>
 #include <thread>
 
+#include <gflags/gflags.h>
+#include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
-
 #include "kvs_client_interface.h"
 #include "kvs_backend.h"
 #include "KeyValueStore.grpc.pb.h"
-
-#ifndef CHIRP_KVS_CLIENT_TEST_H
-#define CHIRP_KVS_CLIENT_TEST_H
 
 // client for key value store backend (only used in testing)
 class KeyValueClientTest : public KeyValueClientInterface{
@@ -25,5 +25,4 @@ class KeyValueClientTest : public KeyValueClientInterface{
    // to avoid gRPC in testing
    KeyValueBackend kvs_backend_;
 };
-
 #endif // CHIRP_KVS_CLIENT_TEST_H

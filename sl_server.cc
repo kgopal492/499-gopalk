@@ -13,6 +13,7 @@ Status ServiceLayerServer::registeruser(ServerContext* context, const RegisterRe
 Status ServiceLayerServer::chirp(ServerContext* context, const ChirpRequest* request,
                 ChirpReply* reply){
   if (!sl_func_.user_exists(request->username())) {
+    LOG(ERROR) << "User " << request->username() << " does not exist in database." << std::endl;
     return Status(StatusCode::INVALID_ARGUMENT, "User does not exist.");
   } else if (!sl_func_.valid_parent_id(request->parent_id())) {
     return Status(StatusCode::INVALID_ARGUMENT, "Parent ID not valid");
@@ -24,12 +25,12 @@ Status ServiceLayerServer::chirp(ServerContext* context, const ChirpRequest* req
 
 Status ServiceLayerServer::follow(ServerContext* context, const FollowRequest* request,
                 FollowReply* reply){
-  int followResult = sl_func_.follow(request->username(), request->to_follow());
-  if (followResult == 1) {
+  if (!sl_func_.user_exists(request->username())) {
     return Status(StatusCode::INVALID_ARGUMENT, "User does not exist.");
-  } else if (followResult == 2) {
+  } else if (!sl_func_.user_exists(request->to_follow())) {
     return Status(StatusCode::INVALID_ARGUMENT, "User to follow does not exist.");
   }
+  sl_func_.follow(request->username(), request->to_follow());
   return Status::OK;
 }
 
@@ -40,7 +41,7 @@ Status ServiceLayerServer::read(ServerContext* context, const ReadRequest* reque
     return Status(StatusCode::INVALID_ARGUMENT, "Invalid chirp ID");
   }
   for(int i = 0; i < chirps.size(); i++) {
-    Chirp *chirp = reply->add_chirps();
+    Chirp *chirp = reply->mutable_chirps(i);
     *chirp = chirps[i];
   }
   return Status::OK;

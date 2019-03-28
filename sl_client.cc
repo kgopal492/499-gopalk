@@ -19,10 +19,11 @@ bool ServiceLayerClient::registeruser(const std::string& username) {
 
   // Determine if the status is ok, then process
   if (status.ok()) {
+    LOG(INFO) << "Status ok from ServiceLayerClient register." << std::endl;
     return true;
   } else {
-    std::cout << status.error_code() << ": " << status.error_message()
-              << std::endl;
+    LOG(ERROR) << status.error_message() << std::endl;
+    std::cout << status.error_message() << std::endl;
     return false;
   }
 }
@@ -46,11 +47,12 @@ Chirp ServiceLayerClient::chirp(const std::string& username, const std::string& 
   // if status ok, print success message and return chirp
   // else, print error message and return empty chirp
   if (status.ok()) {
-    std::cout << "status ok" << std::endl;
+    LOG(INFO) << "Status ok from ServiceLayerClient chirp." << std::endl;
     return reply.chirp();
   } else {
-    std::cout << status.error_code() << ": " << status.error_message()
+    LOG(ERROR) << status.error_code() << ": " << status.error_message()
               << std::endl;
+    std::cout << status.error_message() << std::endl;
     Chirp chirp;
     return chirp;
   }
@@ -74,10 +76,11 @@ bool ServiceLayerClient::follow(const std::string& username, const std::string& 
   // if status ok, return true
   // else, print error message and return false
   if (status.ok()) {
+    LOG(INFO) << "Status ok from ServiceLayerClient follow." << std::endl;
     return true;
   } else {
-    std::cout << status.error_code() << ": " << status.error_message()
-              << std::endl;
+    LOG(ERROR) << status.error_code() << ": " << status.error_message() << std::endl;
+    std::cout << status.error_message() << std::endl;
     return false;
   }
 }
@@ -99,10 +102,11 @@ const google::protobuf::RepeatedPtrField<chirp::Chirp> ServiceLayerClient::read(
   // if status ok, return chirps
   // else, print error and return empty chirps
   if (status.ok()) {
+    LOG(INFO) << "Status ok from ServiceLayerClient read." << std::endl;
     return reply.chirps();
   } else {
-    std::cout << status.error_code() << ": " << status.error_message()
-              << std::endl;
+    LOG(ERROR) << status.error_code() << ": " << status.error_message() << std::endl;
+    std::cout << status.error_message() << std::endl;
     const google::protobuf::RepeatedPtrField<chirp::Chirp> chirp; // TODO: return null/invalid value
     return chirp;
   }
@@ -127,5 +131,6 @@ void ServiceLayerClient::monitor(const std::string& username) {
   Status status = reader->Finish();
   if (!status.ok()) {
     std::cout << "Monitor rpc failed" << std::endl;
+    LOG(ERROR) << status.error_code() << ": " << status.error_message() << std::endl;
   }
 }

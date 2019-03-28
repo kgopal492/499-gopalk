@@ -1,3 +1,14 @@
+#include <stack>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+
+#include <gflags/gflags.h>
+#include <glog/logging.h>
+#include <google/protobuf/util/time_util.h>
+#include <grpcpp/grpcpp.h>
 #include "Backend.grpc.pb.h"
 #include "Backend.pb.h"
 #include "KeyValueStore.grpc.pb.h"
@@ -6,27 +17,6 @@
 #include "ServiceLayer.pb.h"
 #include "kvs_client.h"
 #include "kvs_client_test.h"
-
-#include <stack>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
-
-#include <google/protobuf/util/time_util.h>
-#include <grpcpp/grpcpp.h>
-
-using grpc::Channel;
-using grpc::ClientContext;
-using grpc::Status;
-
-using grpc::Server;
-using grpc::ServerBuilder;
-using grpc::ServerContext;
-using grpc::ServerWriter;
-using grpc::Status;
-using grpc::StatusCode;
 
 using chirp::Chirp;
 using chirp::RegisterRequest;
@@ -40,7 +30,6 @@ using chirp::ReadReply;
 using chirp::MonitorRequest;
 using chirp::MonitorReply;
 using chirp::ServiceLayer;
-
 using chirp::Chirps;
 using chirp::Replies;
 using chirp::Followers;
@@ -59,7 +48,7 @@ class ServiceLayerFunctionality{
   // allow user to send chirp and register with backend
   Chirp* chirp(Chirp* chirp, const std::string& username, const std::string& text, const std::string& parent_id);
   // allow user to follow another user (store in backend)
-  int follow(const std::string& username, const std::string& to_follow);
+  void follow(const std::string& username, const std::string& to_follow);
   // return a vector of Chirps to read a thread of a chirp and its replies
   // if vector is empty, chirp_id is invalid
   std::vector<Chirp> read(const std::string& chirp_id);
@@ -88,6 +77,9 @@ class ServiceLayerFunctionality{
   KeyValueClientInterface* client_;
   // mutex to lock sl for monitor and other functions
   std::mutex sl_func_mtx_;
+  // constant to represent true value in database
+  const std::string kTrue_ = "[TRUE]";
+  // constant to represent false value in database
+  const std::string kFalse_ = "[FALSE]";
 };
-
 #endif // CHIRP_SL_FUNCTIONALITY_H

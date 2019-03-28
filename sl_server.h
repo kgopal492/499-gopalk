@@ -1,12 +1,16 @@
+#ifndef CHIRP_SL_SERVER_H
+#define CHIRP_SL_SERVER_H
+
 #include <stack>
 #include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
+#include <gflags/gflags.h>
+#include <glog/logging.h>
 #include <google/protobuf/util/time_util.h>
 #include <grpcpp/grpcpp.h>
-
 #include "Backend.grpc.pb.h"
 #include "Backend.pb.h"
 #include "KeyValueStore.grpc.pb.h"
@@ -19,14 +23,12 @@
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
-
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::ServerWriter;
 using grpc::Status;
 using grpc::StatusCode;
-
 using chirp::Chirp;
 using chirp::RegisterRequest;
 using chirp::RegisterReply;
@@ -39,13 +41,9 @@ using chirp::ReadReply;
 using chirp::MonitorRequest;
 using chirp::MonitorReply;
 using chirp::ServiceLayer;
-
 using chirp::Chirps;
 using chirp::Replies;
 using chirp::Followers;
-
-#ifndef CHIRP_SL_SERVER_H
-#define CHIRP_SL_SERVER_H
 
 // implementation of service layer
 // takes request from command line clients
@@ -73,5 +71,4 @@ class ServiceLayerServer final : public ServiceLayer::Service {
   // accessing the backend
   ServiceLayerFunctionality sl_func_;
 };
-
 #endif // CHIRP_SL_SERVER_H

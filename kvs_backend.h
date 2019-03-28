@@ -1,13 +1,20 @@
-#include "KeyValueStore.grpc.pb.h"
+#ifndef CHIRP_KVS_BACKEND_H
+#define CHIRP_KVS_BACKEND_H
 
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <iostream>
+#include <memory>
+#include <stack>
 
-#ifndef CHIRP_KVS_BACKEND_H
-#define CHIRP_KVS_BACKEND_H
+#include <gflags/gflags.h>
+#include <glog/logging.h>
+#include <grpcpp/grpcpp.h>
+#include "KeyValueStore.grpc.pb.h"
 
-// Stores actual key value store as an unordered_map data structure
+// stores key value store as an unordered_map data structure
+// after communicating with KeyValueServer
 class KeyValueBackend {
  public:
    // take `key` and `value` to insert into key-value map

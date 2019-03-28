@@ -1,6 +1,5 @@
 #include "sl_functionality.h"
 
-
 ServiceLayerFunctionality::ServiceLayerFunctionality(const bool& testing) {
   if (testing) {
     client_ = new KeyValueClientTest();
@@ -15,9 +14,9 @@ bool ServiceLayerFunctionality::registeruser(const std::string &username) {
   if (user_exists(username)) {
     return false;
   }
-  client_->put(kUserKey, "1");
+  client_->put(kUserKey, kTrue_);
   const std::string kMonitorKey = "monitor::" + username;
-  client_->put(kMonitorKey, "0");
+  client_->put(kMonitorKey, kFalse_);
   return true;
 }
 
@@ -35,13 +34,9 @@ Chirp* ServiceLayerFunctionality::chirp(Chirp* chirp, const std::string& usernam
 }
 
 // allow user to follow another user (store in backend)
-int ServiceLayerFunctionality::follow(const std::string& username, const std::string& to_follow) {
+void ServiceLayerFunctionality::follow(const std::string& username, const std::string& to_follow) {
   std::lock_guard<std::mutex> lock(sl_func_mtx_);
-  if (!user_exists(username)) {
-    return 1; // TODO: change to ENUM
-  } else if (!user_exists(to_follow)) {
-    return 2;
-  }
+
   const std::string kFollowerKey = "followers::" + to_follow;
 
   std::string followers_serial = client_->get(kFollowerKey);
@@ -50,7 +45,7 @@ int ServiceLayerFunctionality::follow(const std::string& username, const std::st
 
   for(int i = 0; i < followers.username_size(); i++) {
     if (followers.username(i) == username) {
-      return 0;
+      return;
     }
   }
 
@@ -60,7 +55,6 @@ int ServiceLayerFunctionality::follow(const std::string& username, const std::st
   followers.SerializeToString(&followers_serial);
 
   client_->put(kFollowerKey, followers_serial);
-  return 0;
 }
 
 std::vector<Chirp> ServiceLayerFunctionality::read(const std::string& chirp_id) {
@@ -75,17 +69,17 @@ Chirps ServiceLayerFunctionality::monitor(const std::string& username) {
   const std::string kMonitorKey = "monitor::" + username;
   std::string monitor_serial = client_->get(kMonitorKey);
   Chirps chirps;
-  if ((monitor_serial != "0") && (monitor_serial != "1")) {
+  if ((monitor_serial != kFalse_) && (monitor_serial != kTrue_)) {
     chirps.ParseFromString(monitor_serial);
   }
-  client_->put(kMonitorKey, "1");
+  client_->put(kMonitorKey, kTrue_);
   return chirps;
 }
 
 bool ServiceLayerFunctionality::user_exists(const std::string &username) {
   const std::string kUserKey = "user::" + username;
   std::string users_serial = client_->get(kUserKey);
-  if (users_serial == "1") {
+  if (users_serial == kTrue_) {
     return true;
   }
   return false;
@@ -142,7 +136,7 @@ std::string ServiceLayerFunctionality::chirp_count() {
   const std::string kChirpCountKey = "chirp_count::";
   std::string chirp_count_serial = client_->get(kChirpCountKey);
   if (chirp_count_serial.empty()) {
-    return "0";
+    return kFalse_;
   }
   return chirp_count_serial;
 }
@@ -171,7 +165,7 @@ void ServiceLayerFunctionality::broadcast_chirp(const std::string& username, Chi
     std::string monitor_serial = client_->get(follower_key);
 
     // if monitoring is true, add chirp to broadcast list for user
-    if (monitor_serial != "0") {
+    if (monitor_serial != kFalse_) {
       Chirps chirps;
       chirps.ParseFromString(monitor_serial);
       Chirp* monitor_chirp = chirps.add_chirps();
@@ -203,5 +197,5 @@ void ServiceLayerFunctionality::read_thread(const std::string& chirp_id, std::ve
 void ServiceLayerFunctionality::clear_monitor(const std::string& username) {
   std::lock_guard<std::mutex> lock(sl_func_mtx_);
   const std::string kMonitorKey = "monitor::" + username;
-  client_->put(kMonitorKey, "0");
+  client_->put(kMonitorKey, kFalse_);
 }

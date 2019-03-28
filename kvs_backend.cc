@@ -1,14 +1,14 @@
 #include "kvs_backend.h"
 
 bool KeyValueBackend::put(const std::string &key, const std::string &value) {
-  // if key is an empty string, return false
+  // if key or value is an empty string, return false
   if (key.empty() || value.empty()) {
     return false;
   }
   // lock the `key_value_pairs_` structure before inserting or updating pair
   std::lock_guard<std::mutex> lock(key_value_mtx_);
   // whether key exists in database or not, update value
-  // any put request can overwrite the previous value
+  // since any put request can overwrite the previous value
   key_value_pairs_[key] = value;
   // return true once key is inserted
   return true;

@@ -1,8 +1,12 @@
 #include <string>
 #include <thread>
+#include <iostream>
+#include <memory>
+#include <stack>
 
+#include <gflags/gflags.h>
+#include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
-
 #include "KeyValueStore.grpc.pb.h"
 #include "kvs_client_interface.h"
 
@@ -10,7 +14,6 @@ using grpc::Channel;
 using grpc::ClientContext;
 using grpc::ClientReaderWriter;
 using grpc::Status;
-
 using chirp::PutRequest;
 using chirp::PutReply;
 using chirp::GetRequest;
@@ -39,5 +42,4 @@ class KeyValueClient : public KeyValueClientInterface {
    //`stub_` to send and receive data over gRPC
    std::unique_ptr<KeyValueStore::Stub> stub_;
 };
-
 #endif // CHIRP_KVS_CLIENT_H

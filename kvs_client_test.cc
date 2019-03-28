@@ -1,4 +1,3 @@
-// TODO: CONSIDER delete class
 #include "kvs_client_test.h"
 
 bool KeyValueClientTest::put(const std::string &key, const std::string &value) {

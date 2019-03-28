@@ -1,10 +1,16 @@
-#include "KeyValueStore.grpc.pb.h"
+#ifndef CHIRP_KVS_SERVER_H
+#define CHIRP_KVS_SERVER_H
 
 #include <mutex>
 #include <string>
+#include <iostream>
+#include <memory>
+#include <stack>
 
+#include <gflags/gflags.h>
+#include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
-
+#include "KeyValueStore.grpc.pb.h"
 #include "kvs_backend.h"
 
 using grpc::Server;
@@ -15,7 +21,6 @@ using grpc::ServerReaderWriter;
 using grpc::ServerWriter;
 using grpc::Status;
 using grpc::StatusCode;
-
 using chirp::PutRequest;
 using chirp::PutReply;
 using chirp::GetRequest;
@@ -23,9 +28,6 @@ using chirp::GetReply;
 using chirp::DeleteRequest;
 using chirp::DeleteReply;
 using chirp::KeyValueStore;
-
-#ifndef CHIRP_KVS_SERVER_H
-#define CHIRP_KVS_SERVER_H
 
 // KeyValueServer class supports takes request from
 // KeyValueClient in Service Layer to support

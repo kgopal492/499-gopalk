@@ -6,14 +6,22 @@ CXXFLAGS += -std=c++11
 ifeq ($(SYSTEM),Darwin)
 LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++`\
            -lgrpc++_reflection\
-           -ldl
+           -ldl\
+					 -lglog\
+           -lgflags\
+					 -lpthread\
+					 -lgtest_main\
+					 -lgtest
+
 else
 LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++`\
            -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed\
            -ldl\
+					 -lglog\
            -lgflags\
-           -lgtest\
-           -lglog
+					 -lpthread\
+					 -lgtest_main\
+					 -lgtest
 endif
 PROTOC = protoc
 GRPC_CPP_PLUGIN = grpc_cpp_plugin
@@ -23,7 +31,7 @@ PROTOS_PATH = ./protos
 
 vpath %.proto $(PROTOS_PATH)
 
-all: key_value_layer service_layer chirp test
+all: key_value_layer service_layer chirp key_value_store_test service_layer_test
 
 key_value_layer: KeyValueStore.pb.o KeyValueStore.grpc.pb.o kvs_server.o kvs_backend.o key_value_layer.o
 	$(CXX) $^ $(LDFLAGS) -o $@
@@ -34,7 +42,10 @@ service_layer: KeyValueStore.pb.o KeyValueStore.grpc.pb.o ServiceLayer.pb.o Serv
 chirp: ServiceLayer.pb.o ServiceLayer.grpc.pb.o sl_client.o chirp.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-test: test.o
+key_value_store_test: key_value_store_test.o kvs_backend.o
+	$(CXX) $^ $(LDFLAGS) -o $@
+
+service_layer_test: KeyValueStore.pb.o KeyValueStore.grpc.pb.o ServiceLayer.pb.o ServiceLayer.grpc.pb.o Backend.pb.o Backend.grpc.pb.o service_layer_test.o kvs_client.o kvs_client_test.o kvs_backend.o sl_functionality.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 %.grpc.pb.cc: %.proto

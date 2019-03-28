@@ -20,10 +20,10 @@ bool KeyValueClient::put(const std::string &key, const std::string &value) {
 
   // Determine if the status is ok, then process
   if (status.ok()) {
+    LOG(INFO) << "Put return status ok form KeyValueClient." << std::endl;
     return true;
   } else {
-    std::cout << status.error_code() << ": " << status.error_message()
-              << std::endl;
+    LOG(ERROR) << status.error_code() << ": " << status.error_message() << std::endl;
     return false;
   }
 }
@@ -48,10 +48,13 @@ std::string KeyValueClient::get(const std::string& key) {
 
   // return first GetReply object since
   // this implementation assumes only one reply
+  // that contains all the necessary information
   while (stream->Read(&getReply)) {
+    LOG(INFO) << "Successful get request."<< std::endl;
     return getReply.value();
   }
   Status status = stream->Finish();
+  LOG(ERROR) << "No return value provided from get request."<< std::endl;
   return "";
 }
 
@@ -62,16 +65,18 @@ bool KeyValueClient::deletekey(const std::string& key) {
 
   // create object to hold reply
   DeleteReply reply;
-
   ClientContext context;
 
   // send to server
   Status status = stub_->deletekey(&context, request, &reply);
 
+  // Determine if status is ok, and log an appropriate message and return
+  // from function
   if (status.ok()) {
+    LOG(INFO) << "Delete request status ok from KeyValueClient" << std::endl;
     return true;
   } else {
-    std::cout << status.error_code() << ": " << status.error_message()
+    LOG(ERROR) << status.error_code() << ": " << status.error_message()
               << std::endl;
     return false;
   }
