@@ -39,6 +39,7 @@ using chirp::Followers;
 
 // implementation of service layer
 // takes request from command line clients
+// accesses key value store to complete requests
 class ServiceLayerFunctionality{
  public:
   // constructor, initializes KeyValueClient

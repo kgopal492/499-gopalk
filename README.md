@@ -1,4 +1,4 @@
-# Chirp Phase 1
+# Chirp Phase 2
 ## Environment Setup
 1. Create & start Vagrant box
 ```

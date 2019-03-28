@@ -51,7 +51,7 @@ Chirp ServiceLayerClient::chirp(const std::string& username, const std::string& 
     return reply.chirp();
   } else {
     LOG(ERROR) << status.error_code() << ": " << status.error_message()
-              << std::endl;
+               << std::endl;
     std::cout << status.error_message() << std::endl;
     Chirp chirp;
     return chirp;

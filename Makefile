@@ -55,4 +55,4 @@ service_layer_test: KeyValueStore.pb.o KeyValueStore.grpc.pb.o ServiceLayer.pb.o
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
 
 clean:
-	rm -f *.o *.pb.cc *.pb.h key_value_layer service_layer chirp test
+	rm -f *.o *.pb.cc *.pb.h key_value_layer service_layer chirp key_value_store_test service_layer_test

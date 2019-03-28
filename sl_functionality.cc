@@ -1,20 +1,27 @@
 #include "sl_functionality.h"
 
 ServiceLayerFunctionality::ServiceLayerFunctionality(const bool& testing) {
+  // if testing is used, initialize client_ with testing class (doesn't use
+  // gRPC)
   if (testing) {
     client_ = new KeyValueClientTest();
-  } else {
+  } else { // Else use KeyValueClient that connects to the KeyValueServer over
+           // gRPC
     client_ = new KeyValueClient(grpc::CreateChannel("localhost:50000", grpc::InsecureChannelCredentials()));
   }
 }
 
 bool ServiceLayerFunctionality::registeruser(const std::string &username) {
   std::lock_guard<std::mutex> lock(sl_func_mtx_);
+  // Form the potential user's key
   const std::string kUserKey = "user::" + username;
+  // If key is present, return false since username is taken
   if (user_exists(username)) {
     return false;
   }
+  // Set the key as taken
   client_->put(kUserKey, kTrue_);
+  // Set monitoring initially to false
   const std::string kMonitorKey = "monitor::" + username;
   client_->put(kMonitorKey, kFalse_);
   return true;
@@ -27,66 +34,76 @@ Chirp* ServiceLayerFunctionality::chirp(Chirp* chirp, const std::string& usernam
   increment_chirp_count();
   // create new chirp and add to database
   create_chirp(chirp, username, text, parent_id, chirp_id);
+  // add a reply to the chirp for a valid parent id
   add_reply(chirp_id, parent_id);
   // broadcast chirp to followers
   broadcast_chirp(username, *chirp);
+  // return chirp to the servicelayer class
   return chirp;
 }
 
 // allow user to follow another user (store in backend)
 void ServiceLayerFunctionality::follow(const std::string& username, const std::string& to_follow) {
   std::lock_guard<std::mutex> lock(sl_func_mtx_);
-
+  // Form followers key for the given user
   const std::string kFollowerKey = "followers::" + to_follow;
-
+  // Retrieve followers from the key value store
   std::string followers_serial = client_->get(kFollowerKey);
   Followers followers;
   followers.ParseFromString(followers_serial);
-
+  // Loop through followers and return if user is already following the other
+  // user
   for(int i = 0; i < followers.username_size(); i++) {
     if (followers.username(i) == username) {
       return;
     }
   }
 
+  // Add the username as a new follower
   followers.add_username(username);
 
   // put new list in database
   followers.SerializeToString(&followers_serial);
-
   client_->put(kFollowerKey, followers_serial);
 }
 
 std::vector<Chirp> ServiceLayerFunctionality::read(const std::string& chirp_id) {
   std::lock_guard<std::mutex> lock(sl_func_mtx_);
+  // Create a vector to store all the chirps in the thread
   std::vector<Chirp> chirps;
+  // call recursive function to read all of the chirps
   read_thread(chirp_id, &chirps);
   return chirps;
 }
-// return the current chirps broadcast to a user that is monitoring
 Chirps ServiceLayerFunctionality::monitor(const std::string& username) {
   std::lock_guard<std::mutex> lock(sl_func_mtx_);
+  // Form monitor key to retrieve new chirps broadcast to the user
   const std::string kMonitorKey = "monitor::" + username;
   std::string monitor_serial = client_->get(kMonitorKey);
   Chirps chirps;
+  // if the monitor has a chirp value, parse the value into a list of chirps
   if ((monitor_serial != kFalse_) && (monitor_serial != kTrue_)) {
     chirps.ParseFromString(monitor_serial);
   }
+  // put monitor key back into the array as true
   client_->put(kMonitorKey, kTrue_);
   return chirps;
 }
 
 bool ServiceLayerFunctionality::user_exists(const std::string &username) {
+  // Form users key to request whether user exists
   const std::string kUserKey = "user::" + username;
   std::string users_serial = client_->get(kUserKey);
+  // Only if the string contains the true value, user exists
   if (users_serial == kTrue_) {
     return true;
   }
   return false;
 }
 
-// check if parent_id is valid
 bool ServiceLayerFunctionality::valid_parent_id(const std::string& parent_id) {
+  // Try to convert the parent ID to an integer, if not possible or the id is
+  // greater or equal to the count of the chirps, the id is invalid
   try {
     if ( (parent_id != "-1") && ((std::stoi(parent_id) >= std::stoi(chirp_count())) || (std::stoi(parent_id) < 0))) {
       return false;
@@ -94,10 +111,10 @@ bool ServiceLayerFunctionality::valid_parent_id(const std::string& parent_id) {
   } catch (std::invalid_argument&) {
     return false;
   }
+  // return true when the id has passed the above tests
   return true;
 }
 
-// create chirp to be inserted into key value store
 void ServiceLayerFunctionality::create_chirp(Chirp* chirp, const std::string& username, const std::string& text, const std::string& parent_id, const std::string& chirp_id) {
   // create timestamp for chirp
   int64_t seconds = google::protobuf::util::TimeUtil::TimestampToSeconds(google::protobuf::util::TimeUtil::GetCurrentTime());
@@ -119,41 +136,50 @@ void ServiceLayerFunctionality::create_chirp(Chirp* chirp, const std::string& us
   client_->put(kChirpKey, chirp_serial);
 }
 
-// add reply to parent chirp
 void ServiceLayerFunctionality::add_reply(const std::string& chirp_id, const std::string& parent_id){
+  // Form key of parent chirp id's replies and retrieve replies
   const std::string kReplyParentKey = "reply::" + parent_id;
   std::string replies_serial = client_->get(kReplyParentKey);
   Replies replies;
   replies.ParseFromString(replies_serial);
+
+  // add chirp id to the end of the rest of the replies
   replies.add_id(chirp_id);
+
+  // add replies back to the database
   replies.SerializeToString(&replies_serial);
   client_->put(kReplyParentKey, replies_serial);
   return;
 }
 
-// return current total count of chirps
 std::string ServiceLayerFunctionality::chirp_count() {
+  // Retrieve current chirp count
   const std::string kChirpCountKey = "chirp_count::";
   std::string chirp_count_serial = client_->get(kChirpCountKey);
+  // If count is an empty string, there have been no chirps added yet
   if (chirp_count_serial.empty()) {
-    return kFalse_;
+    return "0";
   }
   return chirp_count_serial;
 }
-// add one to total chirp count
+
 void ServiceLayerFunctionality::increment_chirp_count() {
+  // Retrieve chirp count from key value store
   const std::string kChirpCountKey = "chirp_count::";
   std::string chirp_count_serial = client_->get(kChirpCountKey);
   int count = 0;
+  // convert chirp count to an integer
   if (!chirp_count_serial.empty()) {
     count = std::stoi(chirp_count_serial);
   }
+  // increment count and restore in database
   count++;
   chirp_count_serial = std::to_string(count);
   client_->put(kChirpCountKey, chirp_count_serial);
 }
 
 void ServiceLayerFunctionality::broadcast_chirp(const std::string& username, Chirp chirp) {
+  // create followers key and retrieve followers
   const std::string kFollowersKey = "followers::" + username;
   std::string followers_serial = client_->get(kFollowersKey);
   Followers followers;
@@ -180,12 +206,15 @@ void ServiceLayerFunctionality::read_thread(const std::string& chirp_id, std::ve
   // push back current chirp to vector
   const std::string kChirpKey = "chirp::" + chirp_id;
   std::string chirp_serial = client_->get(kChirpKey);
+  // ensure you are not taking an empty chirp
   if (!chirp_serial.empty()) {
     Chirp chirp;
     chirp.ParseFromString(chirp_serial);
     chirps->push_back(chirp);
+    // Get all ids of the chirps' replies
     std::string kReplyParentKey = "reply::" + chirp_id;
     std::string replies_serial = client_->get(kReplyParentKey);
+    // parse replies and return
     Replies replies;
     replies.ParseFromString(replies_serial);
     for(int i = 0; i < replies.id_size(); i++) {
@@ -196,6 +225,7 @@ void ServiceLayerFunctionality::read_thread(const std::string& chirp_id, std::ve
 
 void ServiceLayerFunctionality::clear_monitor(const std::string& username) {
   std::lock_guard<std::mutex> lock(sl_func_mtx_);
+  // set monitor back to false once user has quit
   const std::string kMonitorKey = "monitor::" + username;
   client_->put(kMonitorKey, kFalse_);
 }
