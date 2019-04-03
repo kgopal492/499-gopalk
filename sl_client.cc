@@ -1,9 +1,9 @@
 #include "sl_client.h"
 
-SL_Client::SL_Client(std::shared_ptr<Channel> channel)
+ServiceLayerClient::ServiceLayerClient(std::shared_ptr<Channel> channel)
     : stub_(ServiceLayer::NewStub(channel)) {}
 
-bool SL_Client::registeruser(const std::string& username) {
+bool ServiceLayerClient::registeruser(const std::string& username) {
   // Send username to the service layer
   RegisterRequest request;
   request.set_username(username);
@@ -19,15 +19,16 @@ bool SL_Client::registeruser(const std::string& username) {
 
   // Determine if the status is ok, then process
   if (status.ok()) {
+    LOG(INFO) << "Status ok from ServiceLayerClient register." << std::endl;
     return true;
   } else {
-    std::cout << status.error_code() << ": " << status.error_message()
-              << std::endl;
+    LOG(ERROR) << status.error_message() << std::endl;
+    std::cout << status.error_message() << std::endl;
     return false;
   }
 }
 
-Chirp SL_Client::chirp(const std::string& username, const std::string& text, const std::string& parent_id) {
+Chirp ServiceLayerClient::chirp(const std::string& username, const std::string& text, const std::string& parent_id) {
   // create request with username, text, and parent_id
   ChirpRequest request;
   request.set_username(username);
@@ -46,17 +47,18 @@ Chirp SL_Client::chirp(const std::string& username, const std::string& text, con
   // if status ok, print success message and return chirp
   // else, print error message and return empty chirp
   if (status.ok()) {
-    std::cout << "status ok" << std::endl;
+    LOG(INFO) << "Status ok from ServiceLayerClient chirp." << std::endl;
     return reply.chirp();
   } else {
-    std::cout << status.error_code() << ": " << status.error_message()
-              << std::endl;
+    LOG(ERROR) << status.error_code() << ": " << status.error_message()
+               << std::endl;
+    std::cout << status.error_message() << std::endl;
     Chirp chirp;
     return chirp;
   }
 }
 
-bool SL_Client::follow(const std::string& username, const std::string& to_follow) {
+bool ServiceLayerClient::follow(const std::string& username, const std::string& to_follow) {
   // Send username of client and username of chirp user to follow
   FollowRequest request;
   request.set_username(username);
@@ -74,15 +76,16 @@ bool SL_Client::follow(const std::string& username, const std::string& to_follow
   // if status ok, return true
   // else, print error message and return false
   if (status.ok()) {
+    LOG(INFO) << "Status ok from ServiceLayerClient follow." << std::endl;
     return true;
   } else {
-    std::cout << status.error_code() << ": " << status.error_message()
-              << std::endl;
+    LOG(ERROR) << status.error_code() << ": " << status.error_message() << std::endl;
+    std::cout << status.error_message() << std::endl;
     return false;
   }
 }
 
-const google::protobuf::RepeatedPtrField<chirp::Chirp> SL_Client::read(const std::string& chirp_id) {
+const google::protobuf::RepeatedPtrField<chirp::Chirp> ServiceLayerClient::read(const std::string& chirp_id) {
   // create request with id of chirp to read
   ReadRequest request;
   request.set_chirp_id(chirp_id);
@@ -99,16 +102,17 @@ const google::protobuf::RepeatedPtrField<chirp::Chirp> SL_Client::read(const std
   // if status ok, return chirps
   // else, print error and return empty chirps
   if (status.ok()) {
+    LOG(INFO) << "Status ok from ServiceLayerClient read." << std::endl;
     return reply.chirps();
   } else {
-    std::cout << status.error_code() << ": " << status.error_message()
-              << std::endl;
+    LOG(ERROR) << status.error_code() << ": " << status.error_message() << std::endl;
+    std::cout << status.error_message() << std::endl;
     const google::protobuf::RepeatedPtrField<chirp::Chirp> chirp; // TODO: return null/invalid value
     return chirp;
   }
 }
 
-void SL_Client::monitor(const std::string& username) {
+void ServiceLayerClient::monitor(const std::string& username) {
   // create request with username of monitoring user
   MonitorRequest request;
   request.set_username(username);
@@ -125,7 +129,8 @@ void SL_Client::monitor(const std::string& username) {
     std::cout << "\"" << reply.chirp().text() << "\"" << " - " << reply.chirp().username() << " ID: " << reply.chirp().id() << std::endl;
   }
   Status status = reader->Finish();
-  if(!status.ok()) {
+  if (!status.ok()) {
     std::cout << "Monitor rpc failed" << std::endl;
+    LOG(ERROR) << status.error_code() << ": " << status.error_message() << std::endl;
   }
 }

@@ -1,10 +1,5 @@
-#include "Backend.grpc.pb.h"
-#include "Backend.pb.h"
-#include "KeyValueStore.grpc.pb.h"
-#include "KeyValueStore.pb.h"
-#include "ServiceLayer.grpc.pb.h"
-#include "ServiceLayer.pb.h"
-#include "kvs_client.h"
+#ifndef CHIRP_SL_SERVER_H
+#define CHIRP_SL_SERVER_H
 
 #include <stack>
 #include <stdexcept>
@@ -12,20 +7,28 @@
 #include <unordered_set>
 #include <vector>
 
+#include <gflags/gflags.h>
+#include <glog/logging.h>
 #include <google/protobuf/util/time_util.h>
 #include <grpcpp/grpcpp.h>
+#include "Backend.grpc.pb.h"
+#include "Backend.pb.h"
+#include "KeyValueStore.grpc.pb.h"
+#include "KeyValueStore.pb.h"
+#include "ServiceLayer.grpc.pb.h"
+#include "ServiceLayer.pb.h"
+#include "kvs_client.h"
+#include "sl_functionality.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
-
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::ServerWriter;
 using grpc::Status;
 using grpc::StatusCode;
-
 using chirp::Chirp;
 using chirp::RegisterRequest;
 using chirp::RegisterReply;
@@ -38,24 +41,16 @@ using chirp::ReadReply;
 using chirp::MonitorRequest;
 using chirp::MonitorReply;
 using chirp::ServiceLayer;
-
-using chirp::Users;
 using chirp::Chirps;
 using chirp::Replies;
-using chirp::Reply;
-using chirp::Follow;
-using chirp::Following;
 using chirp::Followers;
-
-#ifndef CHIRP_SL_SERVER_H
-#define CHIRP_SL_SERVER_H
 
 // implementation of service layer
 // takes request from command line clients
-class SL_Server final : public ServiceLayer::Service {
+class ServiceLayerServer final : public ServiceLayer::Service {
  public:
-  // constructor, initializes KVS_Client
-  SL_Server();
+  // constructor, initializes KeyValueClient
+  ServiceLayerServer();
   // register user with backend service
   Status registeruser(ServerContext* context, const RegisterRequest* request,
                   RegisterReply* reply) override;
@@ -71,12 +66,9 @@ class SL_Server final : public ServiceLayer::Service {
   // allow user to monitor followers
   Status monitor(ServerContext* context, const MonitorRequest* request,
                   ServerWriter<MonitorReply>* writer) override;
-
  private:
-  // client for keyvaluestore layer
-  KVS_Client client_;
-  // mutex to lock sl for monitor and other functions
-  std::mutex mtx_;
+  // ServiceLayerFunctionality object is used to perform user commands
+  // accessing the backend
+  ServiceLayerFunctionality sl_func_;
 };
-
 #endif // CHIRP_SL_SERVER_H

@@ -66,4 +66,3 @@ service ServiceLayer {
   rpc read (ReadRequest) returns (ReadReply) {}
   rpc monitor (MonitorRequest) returns (stream MonitorReply) {}
 }
-

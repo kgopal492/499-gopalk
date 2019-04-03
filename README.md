@@ -1,4 +1,4 @@
-# Chirp Phase 1
+# Chirp Phase 2
 ## Environment Setup
 1. Create & start Vagrant box
 ```
@@ -60,8 +60,8 @@ git checkout phase1
 Compile with `make` command in root directory: 499-gopalk/
 
 ## Run Chirp
-1. Run executable keyvaluestore in one terminal shell: `./keyvaluestore`
-2. Run executable servicelayer in *another* terminal shell: `./servicelayer`
+1. Run executable key_value_layer in one terminal shell: `./key_value_layer`
+2. Run executable service_layer in *another* terminal shell: `./service_layer`
 3. Run any chirp commands in other terminal(s), e.g.:
 
 ```
@@ -73,3 +73,7 @@ Compile with `make` command in root directory: 499-gopalk/
 ./chirp --monitor=true --user "krishna"
 ```
 4. If monitor flag is run in one shell, spawn another shell to continue to execute chirp commands.
+
+## Run Tests
+1. Tests are compiled with the make command
+2. Run `./service_layer_test` and `./key_value_store_test` to see the results of the gtests
