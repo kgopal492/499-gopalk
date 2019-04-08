@@ -1,12 +1,9 @@
 #include "sl_client.h"
 
-// constructor - initializes channel
-SL_Client::SL_Client(std::shared_ptr<Channel> channel)
+ServiceLayerClient::ServiceLayerClient(std::shared_ptr<Channel> channel)
     : stub_(ServiceLayer::NewStub(channel)) {}
 
-// - registers username of new user with key-value store
-// - returns true if username is available
-bool SL_Client::registeruser(const std::string& username) {
+bool ServiceLayerClient::registeruser(const std::string& username) {
   // Send username to the service layer
   RegisterRequest request;
   request.set_username(username);
@@ -22,93 +19,118 @@ bool SL_Client::registeruser(const std::string& username) {
 
   // Determine if the status is ok, then process
   if (status.ok()) {
+    LOG(INFO) << "Status ok from ServiceLayerClient register." << std::endl;
     return true;
   } else {
-    std::cout << status.error_code() << ": " << status.error_message()
-              << std::endl;
+    LOG(ERROR) << status.error_message() << std::endl;
+    std::cout << status.error_message() << std::endl;
     return false;
   }
 }
 
-// - logs in user to command line
-// - returns true if user exists (and login is valid)
-Chirp SL_Client::chirp(const std::string& username, const std::string& text, const std::string& parent_id) {
+Chirp ServiceLayerClient::chirp(const std::string& username, const std::string& text, const std::string& parent_id) {
+  // create request with username, text, and parent_id
   ChirpRequest request;
   request.set_username(username);
   request.set_text(text);
   request.set_parent_id(parent_id);
 
+  // create object to hold response
   ChirpReply reply;
 
+  // declare context for additional information
   ClientContext context;
 
+  // send the rpc
   Status status = stub_->chirp(&context, request, &reply);
 
+  // if status ok, print success message and return chirp
+  // else, print error message and return empty chirp
   if (status.ok()) {
-    std::cout << "status ok" << std::endl;
+    LOG(INFO) << "Status ok from ServiceLayerClient chirp." << std::endl;
     return reply.chirp();
   } else {
-    std::cout << status.error_code() << ": " << status.error_message()
-              << std::endl;
-    Chirp chirp; // TODO: return null/invalid value
+    LOG(ERROR) << status.error_code() << ": " << status.error_message()
+               << std::endl;
+    std::cout << status.error_message() << std::endl;
+    Chirp chirp;
     return chirp;
   }
 }
 
-// - takes text to be chirped, and sends to key-value store
-// - returns true if chirp is successfully
-//   registered with key-value store
-bool SL_Client::follow(const std::string& username, const std::string& to_follow) {
+bool ServiceLayerClient::follow(const std::string& username, const std::string& to_follow) {
   // Send username of client and username of chirp user to follow
   FollowRequest request;
   request.set_username(username);
   request.set_to_follow(to_follow);
 
+  // create reply object
   FollowReply reply;
 
+  // create context to hold additional information from server
   ClientContext context;
 
+  // send rpc
   Status status = stub_->follow(&context, request, &reply);
 
+  // if status ok, return true
+  // else, print error message and return false
   if (status.ok()) {
+    LOG(INFO) << "Status ok from ServiceLayerClient follow." << std::endl;
     return true;
   } else {
-    std::cout << status.error_code() << ": " << status.error_message()
-              << std::endl;
+    LOG(ERROR) << status.error_code() << ": " << status.error_message() << std::endl;
+    std::cout << status.error_message() << std::endl;
     return false;
   }
 }
 
-// - takes chirpID of beginning of thread
-// - returns string of chirp thread
-const google::protobuf::RepeatedPtrField<chirp::Chirp> SL_Client::read(const std::string& chirp_id) {
+const google::protobuf::RepeatedPtrField<chirp::Chirp> ServiceLayerClient::read(const std::string& chirp_id) {
+  // create request with id of chirp to read
   ReadRequest request;
   request.set_chirp_id(chirp_id);
 
+  // create object to store reply
   ReadReply reply;
 
+  // create context for additional information from server
   ClientContext context;
 
+  // send rpc
   Status status = stub_->read(&context, request, &reply);
 
+  // if status ok, return chirps
+  // else, print error and return empty chirps
   if (status.ok()) {
+    LOG(INFO) << "Status ok from ServiceLayerClient read." << std::endl;
     return reply.chirps();
   } else {
-    std::cout << status.error_code() << ": " << status.error_message()
-              << std::endl;
+    LOG(ERROR) << status.error_code() << ": " << status.error_message() << std::endl;
+    std::cout << status.error_message() << std::endl;
     const google::protobuf::RepeatedPtrField<chirp::Chirp> chirp; // TODO: return null/invalid value
     return chirp;
   }
 }
 
-// - waits for service layer to send chirps of following users
-void SL_Client::monitor(const std::string& username) {
+void ServiceLayerClient::monitor(const std::string& username) {
+  // create request with username of monitoring user
   MonitorRequest request;
   request.set_username(username);
 
+  // create object to store stream of replies
   MonitorReply reply;
 
+  // create context for additional information from server
   ClientContext context;
 
-  stub_->monitor(&context, request);
+  // create `reader` to read stream of data from server
+  std::unique_ptr<ClientReader<MonitorReply> > reader(stub_->monitor(&context, request));
+  while(reader->Read(&reply)) {
+    std::cout << "\"" << reply.chirp().text() << "\"" << " - " << reply.chirp().username() << " ID: " << reply.chirp().id() << std::endl;
+  }
+  Status status = reader->Finish();
+  if (!status.ok()) {
+    std::cout << "Monitor rpc failed" << std::endl;
+    LOG(ERROR) << status.error_code() << ": " << status.error_message() << std::endl;
+  }
 }

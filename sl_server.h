@@ -1,17 +1,34 @@
-#include "ServiceLayer.grpc.pb.h"
-#include "ServiceLayer.pb.h"
+#ifndef CHIRP_SL_SERVER_H
+#define CHIRP_SL_SERVER_H
 
+#include <stack>
+#include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
+#include <gflags/gflags.h>
+#include <glog/logging.h>
+#include <google/protobuf/util/time_util.h>
 #include <grpcpp/grpcpp.h>
+#include "Backend.grpc.pb.h"
+#include "Backend.pb.h"
+#include "KeyValueStore.grpc.pb.h"
+#include "KeyValueStore.pb.h"
+#include "ServiceLayer.grpc.pb.h"
+#include "ServiceLayer.pb.h"
+#include "kvs_client.h"
+#include "sl_functionality.h"
 
+using grpc::Channel;
+using grpc::ClientContext;
+using grpc::Status;
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
+using grpc::ServerWriter;
 using grpc::Status;
-
+using grpc::StatusCode;
 using chirp::Chirp;
 using chirp::RegisterRequest;
 using chirp::RegisterReply;
@@ -24,14 +41,16 @@ using chirp::ReadReply;
 using chirp::MonitorRequest;
 using chirp::MonitorReply;
 using chirp::ServiceLayer;
-
-#ifndef CHIRP_SL_SERVER_H
-#define CHIRP_SL_SERVER_H
+using chirp::Chirps;
+using chirp::Replies;
+using chirp::Followers;
 
 // implementation of service layer
 // takes request from command line clients
-class SL_Server final : public ServiceLayer::Service {
+class ServiceLayerServer final : public ServiceLayer::Service {
  public:
+  // constructor, initializes KeyValueClient
+  ServiceLayerServer();
   // register user with backend service
   Status registeruser(ServerContext* context, const RegisterRequest* request,
                   RegisterReply* reply) override;
@@ -46,19 +65,10 @@ class SL_Server final : public ServiceLayer::Service {
                   ReadReply* reply) override;
   // allow user to monitor followers
   Status monitor(ServerContext* context, const MonitorRequest* request,
-                  MonitorReply* reply);
- //TODO: serialize and move data to Key Value Store
+                  ServerWriter<MonitorReply>* writer) override;
  private:
-  // set of users to validate registration/log-in
-  std::unordered_set<std::string> users_;
-  // vector of all chirps stored in the location of their ID
-  std::vector<Chirp> chirps_;
-  // associates chirp_id with ids of replies (for read)
-  std::vector<std::vector<int> > replies_;
-  // associate username to followers (for monitor and follow)
-  std::unordered_map<std::string, std::unordered_set<std::string> > followers_;
-  // associates username to following (for monitor and follow)
-  std::unordered_map<std::string, std::unordered_set<std::string> > following_;
+  // ServiceLayerFunctionality object is used to perform user commands
+  // accessing the backend
+  ServiceLayerFunctionality sl_func_;
 };
-
-#endif
+#endif // CHIRP_SL_SERVER_H

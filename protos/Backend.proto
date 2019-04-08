@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+import "ServiceLayer.proto";
+
+package chirp;
+
+// stores chirps for monitor request
+message Chirps {
+  repeated Chirp chirps = 1;
+}
+
+// structure to associate chirp with replies
+message Replies {
+  repeated string id = 2;
+}
+
+// structure to associate username with other users
+// to store following and follower data
+message Followers {
+  repeated string username = 1;
+}
