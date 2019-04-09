@@ -221,6 +221,59 @@ TEST(ServiceLayerFunctionalityTest, ValidParentID) {
   EXPECT_EQ(sl_func.valid_parent_id("5"), false);
 }
 
+TEST(ServiceLayerFunctionalityTest, Stream) {
+  ServiceLayerFunctionality sl_func(true);
+  sl_func.registeruser("jillian");
+  EXPECT_EQ(sl_func.user_exists("jillian"), true);
+  sl_func.startStream("jillian", "#Athenahacks");
+
+  Chirps chirps1 = sl_func.stream("jillian");
+  // stream should not initially return a chirp
+  EXPECT_EQ(chirps1.chirps_size(), 0);
+
+  Chirp *chirp1 = new Chirp();
+  std::string username1 = "krishna";
+  std::string text1 = "#Athenahacks";
+  std::string parent_id1 = "-1";
+  sl_func.chirp(chirp1, username1, text1, parent_id1);
+
+  chirps1 = sl_func.stream("jillian");
+  EXPECT_EQ(chirps1.chirps_size(), 1);
+  chirps1 = sl_func.stream("jillian");
+  EXPECT_EQ(chirps1.chirps_size(), 0);
+
+  sl_func.endStream("jillian", "#Athenahacks");
+  Chirp *chirp2 = new Chirp();
+  std::string username2 = "krishna";
+  std::string text2 = "#Athenahacks";
+  std::string parent_id2 = "-1";
+  sl_func.chirp(chirp2, username2, text2, parent_id2);
+  Chirps chirps2 = sl_func.stream("jillian");
+  EXPECT_EQ(chirps2.chirps_size(), 0);
+
+  delete chirp1;
+  delete chirp2;
+}
+TEST(ServiceLayerFunctionalityTest, StreamInvalid) {
+  ServiceLayerFunctionality sl_func(true);
+  sl_func.registeruser("jillian");
+  EXPECT_EQ(sl_func.user_exists("jillian"), true);
+  sl_func.startStream("jillian", "#Athenahacks");
+
+  Chirp *chirp1 = new Chirp();
+  std::string username1 = "krishna";
+  std::string text1 = "#Athenahacks2019";
+  std::string parent_id1 = "-1";
+  sl_func.chirp(chirp1, username1, text1, parent_id1);
+
+  Chirps chirps1 = sl_func.stream("jillian");
+  EXPECT_EQ(chirps1.chirps_size(), 0);
+
+  sl_func.endStream("jillian", "#Athenahacks");
+
+  delete chirp1;
+}
+
 int main(int argc, char* argv[]) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

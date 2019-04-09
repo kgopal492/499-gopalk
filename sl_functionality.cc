@@ -90,6 +90,66 @@ Chirps ServiceLayerFunctionality::monitor(const std::string& username) {
   return chirps;
 }
 
+Chirps ServiceLayerFunctionality::stream(const std::string& username) {
+  std::lock_guard<std::mutex> lock(sl_func_mtx_);
+  // Form stream key to retrieve new chirps broadcast to the user
+  const std::string kStreamKey = "stream::" + username;
+  std::string stream_serial = client_->get(kStreamKey);
+  Chirps chirps;
+  if (stream_serial == kFalse_) {
+    return chirps;
+  }
+  chirps.ParseFromString(stream_serial);
+  // put stream key back into the array as empty
+  client_->put(kStreamKey, kFalse_);
+  return chirps;
+}
+
+void ServiceLayerFunctionality::startStream(const std::string& username, const std::string& hashtag) {
+  std::lock_guard<std::mutex> lock(sl_func_mtx_);
+  // Form streaming key for the given hashtag
+  const std::string kStreamingKey = "streaming::" + hashtag;
+  // Retrieve streamers from the key value store
+  std::string streaming_serial = client_->get(kStreamingKey);
+  Streamers streamers;
+  streamers.ParseFromString(streaming_serial);
+
+  // Add the username as a new streamer
+  streamers.add_username(username);
+
+  // put new list in database
+  streamers.SerializeToString(&streaming_serial);
+  client_->put(kStreamingKey, streaming_serial);
+}
+void ServiceLayerFunctionality::endStream(const std::string& username, const std::string& hashtag) {
+  std::lock_guard<std::mutex> lock(sl_func_mtx_);
+  // Form streaming key for the given hashtag
+  const std::string kStreamingKey = "streaming::" + hashtag;
+  // Retrieve streamers from the key value store
+  std::string streaming_serial = client_->get(kStreamingKey);
+  Streamers streamers;
+  streamers.ParseFromString(streaming_serial);
+
+  Streamers updated_streamers;
+  for (int i = 0; i < streamers.username_size(); i++) {
+    if (streamers.username(i) != username) {
+      updated_streamers.add_username(streamers.username(i));
+    }
+  }
+
+  if (updated_streamers.username_size() != 0) {
+    updated_streamers.SerializeToString(&streaming_serial);
+    client_->put(kStreamingKey, streaming_serial);
+  }
+  else {
+    client_->deletekey(kStreamingKey);
+  }
+
+  const std::string kStreamKey = "stream::" + username;
+  client_->put(kStreamKey, kFalse_);
+}
+
+
 bool ServiceLayerFunctionality::user_exists(const std::string &username) {
   // Form users key to request whether user exists
   const std::string kUserKey = "user::" + username;
@@ -199,6 +259,41 @@ void ServiceLayerFunctionality::broadcast_chirp(const std::string& username, Chi
       chirps.SerializeToString(&monitor_serial);
       client_->put(follower_key, monitor_serial);
     }
+  }
+
+  std::string message = chirp.text();
+  size_t pos = message.find("#");
+  while (pos != std::string::npos) {
+    message = message.substr(pos);
+    std::string hashtag = message;
+    size_t space = hashtag.find(" ");
+    if (space != std::string::npos) {
+      hashtag = hashtag.substr(0,space);
+    }
+    stream_chirp(chirp, hashtag);
+    message = message.substr(1);
+    pos = message.find("#");
+  }
+}
+
+void ServiceLayerFunctionality::stream_chirp(Chirp chirp, const std::string& hashtag) {
+  std::cout<<"Someone is trying to stream a chirp with hashtag "<<hashtag<<std::endl;
+  const std::string kStreamingKey = "streaming::" + hashtag;
+  std::string streaming_serial = client_->get(kStreamingKey);
+  Streamers streamers;
+  streamers.ParseFromString(streaming_serial);
+
+  for(int i = 0; i < streamers.username_size(); i++) {
+    std::string stream_key = "stream::"+streamers.username(i);
+    std::string stream_serial = client_->get(stream_key);
+    Chirps chirps;
+    if (stream_serial != kFalse_) {
+        chirps.ParseFromString(stream_serial);
+    }
+    Chirp* stream_chirp = chirps.add_chirps();
+    *stream_chirp = chirp;
+    chirps.SerializeToString(&stream_serial);
+    client_->put(stream_key, stream_serial);
   }
 }
 
