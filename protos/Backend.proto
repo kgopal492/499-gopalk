@@ -19,3 +19,9 @@ message Replies {
 message Followers {
   repeated string username = 1;
 }
+
+// structure to associate username with other users
+// to store users who are streaming certain hashtags
+message Streamers {
+  repeated string username = 1;
+}

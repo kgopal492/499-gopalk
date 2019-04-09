@@ -33,6 +33,7 @@ using chirp::ServiceLayer;
 using chirp::Chirps;
 using chirp::Replies;
 using chirp::Followers;
+using chirp::Streamers;
 
 #ifndef CHIRP_SL_FUNCTIONALITY_H
 #define CHIRP_SL_FUNCTIONALITY_H
@@ -55,6 +56,12 @@ class ServiceLayerFunctionality{
   std::vector<Chirp> read(const std::string& chirp_id);
   // return the current chirps broadcast to a user that is monitoring
   Chirps monitor(const std::string& username);
+  // return the current chirps broadcast to a user that is streaming
+  Chirps stream(const std::string& username);
+  // adds a user to the stream list for the given hashtag
+  void startStream(const std::string& username, const std::string& hashtag);
+  // removes a user from the stream list for the given hashtag
+  void endStream(const std::string& username, const std::string& hashtag);
   // clears monitor value so that monitored chirps are no longer broadcast to the follower
   void clear_monitor(const std::string& username);
   // check if user exists in key value store backend
@@ -74,6 +81,8 @@ class ServiceLayerFunctionality{
   void increment_chirp_count();
   // broadcast a chirp to all followers of the user who are monitoring
   void broadcast_chirp(const std::string& username, Chirp chirp);
+  // broadcast a chirp to all users who are streaming for a given hashtag
+  void stream_chirp(Chirp chirp, const std::string& hashtag);
   // client for keyvaluestore layer
   KeyValueClientInterface* client_;
   // mutex to lock sl for monitor and other functions
