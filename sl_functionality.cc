@@ -5,13 +5,14 @@ ServiceLayerFunctionality::ServiceLayerFunctionality(const bool& testing) {
   // gRPC)
   if (testing) {
     client_ = new KeyValueClientTest();
-  } else { // Else use KeyValueClient that connects to the KeyValueServer over
-           // gRPC
-    client_ = new KeyValueClient(grpc::CreateChannel("localhost:50000", grpc::InsecureChannelCredentials()));
+  } else {  // Else use KeyValueClient that connects to the KeyValueServer over
+            // gRPC
+    client_ = new KeyValueClient(grpc::CreateChannel(
+        "localhost:50000", grpc::InsecureChannelCredentials()));
   }
 }
 
-bool ServiceLayerFunctionality::registeruser(const std::string &username) {
+bool ServiceLayerFunctionality::registeruser(const std::string& username) {
   std::lock_guard<std::mutex> lock(sl_func_mtx_);
   // Form the potential user's key
   const std::string kUserKey = "user::" + username;
@@ -27,7 +28,10 @@ bool ServiceLayerFunctionality::registeruser(const std::string &username) {
   return true;
 }
 
-Chirp* ServiceLayerFunctionality::chirp(Chirp* chirp, const std::string& username, const std::string& text, const std::string& parent_id) {
+Chirp* ServiceLayerFunctionality::chirp(Chirp* chirp,
+                                        const std::string& username,
+                                        const std::string& text,
+                                        const std::string& parent_id) {
   std::lock_guard<std::mutex> lock(sl_func_mtx_);
   // get new chirp id, and update chirp count
   std::string chirp_id = chirp_count();
@@ -43,7 +47,8 @@ Chirp* ServiceLayerFunctionality::chirp(Chirp* chirp, const std::string& usernam
 }
 
 // allow user to follow another user (store in backend)
-void ServiceLayerFunctionality::follow(const std::string& username, const std::string& to_follow) {
+void ServiceLayerFunctionality::follow(const std::string& username,
+                                       const std::string& to_follow) {
   std::lock_guard<std::mutex> lock(sl_func_mtx_);
   // Form followers key for the given user
   const std::string kFollowerKey = "followers::" + to_follow;
@@ -53,7 +58,7 @@ void ServiceLayerFunctionality::follow(const std::string& username, const std::s
   followers.ParseFromString(followers_serial);
   // Loop through followers and return if user is already following the other
   // user
-  for(int i = 0; i < followers.username_size(); i++) {
+  for (int i = 0; i < followers.username_size(); i++) {
     if (followers.username(i) == username) {
       return;
     }
@@ -67,7 +72,8 @@ void ServiceLayerFunctionality::follow(const std::string& username, const std::s
   client_->put(kFollowerKey, followers_serial);
 }
 
-std::vector<Chirp> ServiceLayerFunctionality::read(const std::string& chirp_id) {
+std::vector<Chirp> ServiceLayerFunctionality::read(
+    const std::string& chirp_id) {
   std::lock_guard<std::mutex> lock(sl_func_mtx_);
   // Create a vector to store all the chirps in the thread
   std::vector<Chirp> chirps;
@@ -90,7 +96,70 @@ Chirps ServiceLayerFunctionality::monitor(const std::string& username) {
   return chirps;
 }
 
-bool ServiceLayerFunctionality::user_exists(const std::string &username) {
+Chirps ServiceLayerFunctionality::stream(const std::string& username) {
+  std::lock_guard<std::mutex> lock(sl_func_mtx_);
+  // Form stream key to retrieve new chirps broadcast to the user
+  const std::string kStreamKey = kUserStream_ + username;
+  std::string stream_serial = client_->get(kStreamKey);
+  Chirps chirps;
+  if (stream_serial == kFalse_) {
+    return chirps;
+  }
+  chirps.ParseFromString(stream_serial);
+  // put stream key back into the array as empty
+  client_->put(kStreamKey, kFalse_);
+  return chirps;
+}
+
+void ServiceLayerFunctionality::start_stream(const std::string& username,
+                                             const std::string& hashtag) {
+  std::lock_guard<std::mutex> lock(sl_func_mtx_);
+  if (hashtag.length() == 1 || hashtag.find("#") == std::string::npos) {
+    return;
+  }
+  // Form streaming key for the given hashtag
+  const std::string kStreamingKey = kHashtagStream_ + hashtag;
+  // Retrieve streamers from the key value store
+  std::string streaming_serial = client_->get(kStreamingKey);
+  Streamers streamers;
+  streamers.ParseFromString(streaming_serial);
+
+  // Add the username as a new streamer
+  streamers.add_username(username);
+
+  // put new list in database
+  streamers.SerializeToString(&streaming_serial);
+  client_->put(kStreamingKey, streaming_serial);
+}
+void ServiceLayerFunctionality::end_stream(const std::string& username,
+                                           const std::string& hashtag) {
+  std::lock_guard<std::mutex> lock(sl_func_mtx_);
+  // Form streaming key for the given hashtag
+  const std::string kStreamingKey = kHashtagStream_ + hashtag;
+  // Retrieve streamers from the key value store
+  std::string streaming_serial = client_->get(kStreamingKey);
+  Streamers streamers;
+  streamers.ParseFromString(streaming_serial);
+
+  Streamers updated_streamers;
+  for (int i = 0; i < streamers.username_size(); i++) {
+    if (streamers.username(i) != username) {
+      updated_streamers.add_username(streamers.username(i));
+    }
+  }
+
+  if (updated_streamers.username_size() != 0) {
+    updated_streamers.SerializeToString(&streaming_serial);
+    client_->put(kStreamingKey, streaming_serial);
+  } else {
+    client_->deletekey(kStreamingKey);
+  }
+
+  const std::string kStreamKey = kUserStream_ + username;
+  client_->put(kStreamKey, kFalse_);
+}
+
+bool ServiceLayerFunctionality::user_exists(const std::string& username) {
   // Form users key to request whether user exists
   const std::string kUserKey = "user::" + username;
   std::string users_serial = client_->get(kUserKey);
@@ -105,7 +174,9 @@ bool ServiceLayerFunctionality::valid_parent_id(const std::string& parent_id) {
   // Try to convert the parent ID to an integer, if not possible or the id is
   // greater or equal to the count of the chirps, the id is invalid
   try {
-    if ( (parent_id != "-1") && ((std::stoi(parent_id) >= std::stoi(chirp_count())) || (std::stoi(parent_id) < 0))) {
+    if ((parent_id != "-1") &&
+        ((std::stoi(parent_id) >= std::stoi(chirp_count())) ||
+         (std::stoi(parent_id) < 0))) {
       return false;
     }
   } catch (std::invalid_argument&) {
@@ -115,10 +186,16 @@ bool ServiceLayerFunctionality::valid_parent_id(const std::string& parent_id) {
   return true;
 }
 
-void ServiceLayerFunctionality::create_chirp(Chirp* chirp, const std::string& username, const std::string& text, const std::string& parent_id, const std::string& chirp_id) {
+void ServiceLayerFunctionality::create_chirp(Chirp* chirp,
+                                             const std::string& username,
+                                             const std::string& text,
+                                             const std::string& parent_id,
+                                             const std::string& chirp_id) {
   // create timestamp for chirp
-  int64_t seconds = google::protobuf::util::TimeUtil::TimestampToSeconds(google::protobuf::util::TimeUtil::GetCurrentTime());
-  int64_t useconds = google::protobuf::util::TimeUtil::TimestampToMicroseconds(google::protobuf::util::TimeUtil::GetCurrentTime());
+  int64_t seconds = google::protobuf::util::TimeUtil::TimestampToSeconds(
+      google::protobuf::util::TimeUtil::GetCurrentTime());
+  int64_t useconds = google::protobuf::util::TimeUtil::TimestampToMicroseconds(
+      google::protobuf::util::TimeUtil::GetCurrentTime());
 
   // set member variables of Chirp
   chirp::Timestamp* ts = chirp->mutable_timestamp();
@@ -136,7 +213,8 @@ void ServiceLayerFunctionality::create_chirp(Chirp* chirp, const std::string& us
   client_->put(kChirpKey, chirp_serial);
 }
 
-void ServiceLayerFunctionality::add_reply(const std::string& chirp_id, const std::string& parent_id){
+void ServiceLayerFunctionality::add_reply(const std::string& chirp_id,
+                                          const std::string& parent_id) {
   // Form key of parent chirp id's replies and retrieve replies
   const std::string kReplyParentKey = "reply::" + parent_id;
   std::string replies_serial = client_->get(kReplyParentKey);
@@ -178,7 +256,8 @@ void ServiceLayerFunctionality::increment_chirp_count() {
   client_->put(kChirpCountKey, chirp_count_serial);
 }
 
-void ServiceLayerFunctionality::broadcast_chirp(const std::string& username, Chirp chirp) {
+void ServiceLayerFunctionality::broadcast_chirp(const std::string& username,
+                                                Chirp chirp) {
   // create followers key and retrieve followers
   const std::string kFollowersKey = "followers::" + username;
   std::string followers_serial = client_->get(kFollowersKey);
@@ -186,8 +265,8 @@ void ServiceLayerFunctionality::broadcast_chirp(const std::string& username, Chi
   followers.ParseFromString(followers_serial);
 
   // loop through each follower
-  for(int i = 0; i < followers.username_size(); i++) {
-    std::string follower_key ="monitor::" + followers.username(i);
+  for (int i = 0; i < followers.username_size(); i++) {
+    std::string follower_key = "monitor::" + followers.username(i);
     std::string monitor_serial = client_->get(follower_key);
 
     // if monitoring is true, add chirp to broadcast list for user
@@ -200,9 +279,56 @@ void ServiceLayerFunctionality::broadcast_chirp(const std::string& username, Chi
       client_->put(follower_key, monitor_serial);
     }
   }
+  std::vector<std::string> hashtags = chirp_hashtag_check(chirp);
+  for (int i = 0; i < hashtags.size(); i++) {
+    stream_chirp(chirp, hashtags[i]);
+  }
 }
 
-void ServiceLayerFunctionality::read_thread(const std::string& chirp_id, std::vector<Chirp>* chirps) {
+std::vector<std::string> ServiceLayerFunctionality::chirp_hashtag_check(
+    Chirp chirp) {
+  std::vector<std::string> hashtags;
+  std::string message = chirp.text();
+  size_t pos = message.find("#");
+  while (pos != std::string::npos) {
+    message = message.substr(pos);
+    std::string hashtag = message;
+    size_t space = hashtag.find(" ");
+    if (space != std::string::npos) {
+      hashtag = hashtag.substr(0, space);
+    }
+    hashtags.push_back(hashtag);
+    message = message.substr(1);
+    pos = message.find("#");
+  }
+  return hashtags;
+}
+
+void ServiceLayerFunctionality::stream_chirp(Chirp chirp,
+                                             const std::string& hashtag) {
+  LOG(INFO) << "Someone is trying to stream a chirp with hashtag " << hashtag
+            << std::endl;
+  const std::string kStreamingKey = kHashtagStream_ + hashtag;
+  std::string streaming_serial = client_->get(kStreamingKey);
+  Streamers streamers;
+  streamers.ParseFromString(streaming_serial);
+
+  for (int i = 0; i < streamers.username_size(); i++) {
+    std::string stream_key = kUserStream_ + streamers.username(i);
+    std::string stream_serial = client_->get(stream_key);
+    Chirps chirps;
+    if (stream_serial != kFalse_) {
+      chirps.ParseFromString(stream_serial);
+    }
+    Chirp* stream_chirp = chirps.add_chirps();
+    *stream_chirp = chirp;
+    chirps.SerializeToString(&stream_serial);
+    client_->put(stream_key, stream_serial);
+  }
+}
+
+void ServiceLayerFunctionality::read_thread(const std::string& chirp_id,
+                                            std::vector<Chirp>* chirps) {
   // push back current chirp to vector
   const std::string kChirpKey = "chirp::" + chirp_id;
   std::string chirp_serial = client_->get(kChirpKey);
@@ -217,7 +343,7 @@ void ServiceLayerFunctionality::read_thread(const std::string& chirp_id, std::ve
     // parse replies and return
     Replies replies;
     replies.ParseFromString(replies_serial);
-    for(int i = 0; i < replies.id_size(); i++) {
+    for (int i = 0; i < replies.id_size(); i++) {
       read_thread(replies.id(i), chirps);
     }
   }
